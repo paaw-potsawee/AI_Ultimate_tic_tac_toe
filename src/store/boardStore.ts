@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { CellPosition } from "../types/board";
-import { type Move, type Player } from "../types/game";
+import type { Move, Player } from "../types/game";
 import {
     applyMove,
     checkGameWinner,
@@ -10,6 +10,7 @@ import {
     toRenderBoard,
     back,
 } from "../lib/game";
+import type { GameModeValue } from "../types/gameMode";
 
 let state = getUltimateBoard();
 let currentPlayer: Player = 0;
@@ -19,9 +20,11 @@ let availableLocalBoards: CellPosition[] = getAvailableLocalBoards(
     state,
     history,
 );
+let option: GameModeValue = 1;
 let boardSnapshot = toRenderBoard(state);
 
 const listeners: Set<() => void> = new Set();
+const optionListeners: Set<() => void> = new Set();
 
 const emit = () => {
     listeners.forEach((cb) => cb());
@@ -39,6 +42,18 @@ const BoardStore = {
     },
     getBoard() {
         return boardSnapshot;
+    },
+    subscribeOption(cb: () => void) {
+        optionListeners.add(cb);
+        return () => optionListeners.delete(cb);
+    },
+    getOption() {
+        return option;
+    },
+    setOption(newOption: GameModeValue) {
+        if (newOption === option) return;
+        option = newOption;
+        optionListeners.forEach((cb) => cb());
     },
     clearBoard() {
         state = getUltimateBoard();
@@ -115,5 +130,17 @@ export const useBoardStore = () => {
         winner,
         history,
         availableLocalBoards,
+    };
+};
+
+export const useOptionStore = () => {
+    const option = useSyncExternalStore(
+        BoardStore.subscribeOption,
+        BoardStore.getOption,
+    );
+
+    return {
+        option,
+        setOption: BoardStore.setOption,
     };
 };

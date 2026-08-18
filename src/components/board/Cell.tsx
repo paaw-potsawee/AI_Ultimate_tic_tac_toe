@@ -1,8 +1,8 @@
 import { useBoardStore } from "../../store/boardStore";
-import { type CellClickProps } from "../../types/board";
+import { type CellPosition } from "../../types/board";
 
 interface CellProps {
-    cellClickProps: CellClickProps;
+    cellClickProps: CellPosition;
 }
 
 const Cell = ({ cellClickProps }: CellProps) => {

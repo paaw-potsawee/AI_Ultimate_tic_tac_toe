@@ -5,8 +5,6 @@ export interface CellPosition {
     cellCol: number;
 }
 
-export type CellClickProps = CellPosition;
-
 export type CellClickHandler = (props: CellPosition) => void;
 
 export type RenderMove = "X" | "O" | null;

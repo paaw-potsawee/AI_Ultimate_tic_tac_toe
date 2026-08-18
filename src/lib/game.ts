@@ -25,6 +25,33 @@ const getBoardIndexFromCell = (cellRow: number, cellCol: number): number => {
     return cellRow * 3 + cellCol;
 };
 
+export const getAvailableMoves = (state: GameState): number[] => {
+    const availableMoves: number[] = [];
+    const boards =
+        state.nextBoard === 9 ? [0, 1, 2, 3, 4, 5, 6, 7, 8] : [state.nextBoard];
+
+    for (const boardIndex of boards) {
+        if (
+            (state.wonX & (1 << boardIndex)) !== 0 ||
+            (state.wonO & (1 << boardIndex)) !== 0 ||
+            isBoardFull(state.x[boardIndex] | state.o[boardIndex])
+        ) {
+            continue;
+        }
+
+        for (let cellIndex = 0; cellIndex < 9; cellIndex += 1) {
+            const bit = 1 << cellIndex;
+            const isOccupied =
+                (state.x[boardIndex] & bit) !== 0 ||
+                (state.o[boardIndex] & bit) !== 0;
+            if (!isOccupied) {
+                availableMoves.push(boardIndex * 9 + cellIndex);
+            }
+        }
+    }
+    return availableMoves;
+};
+
 const getAvailableBoardIndex = (state: GameState, lastMove: Move): number => {
     const cellRow = Math.floor(lastMove.cell / 3);
     const cellCol = lastMove.cell % 3;

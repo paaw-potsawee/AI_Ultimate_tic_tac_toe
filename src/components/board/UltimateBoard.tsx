@@ -1,9 +1,11 @@
 import LocalBoard from "./LocalBoard";
-import { useBoardStore } from "../../store/boardStore";
+import { useBoardStore, useOptionStore } from "../../store/boardStore";
+import { gameModeOptions, parseGameMode } from "../../types/gameMode";
 
 const UltimateBoard = () => {
     const { board, clearBoard, back, currentPlayer, winner, history } =
         useBoardStore();
+    const { option, setOption } = useOptionStore();
     return (
         <>
             {winner !== null && (
@@ -26,7 +28,9 @@ const UltimateBoard = () => {
                     );
                 })}
             </div>
-            <div>current player: {currentPlayer}</div>
+            <div>
+                current player: {currentPlayer} playing vs {option}
+            </div>
             <button className="border p-2 hover:bg-slate-500" onClick={back}>
                 back
             </button>
@@ -36,6 +40,16 @@ const UltimateBoard = () => {
             >
                 Reset
             </button>
+            <select
+                value={option}
+                onChange={(e) => setOption(parseGameMode(e.target.value))}
+            >
+                {gameModeOptions.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                        {label}
+                    </option>
+                ))}
+            </select>
             <div className="text-sm text-gray-400 mt-2">
                 {history.map((move, index) => (
                     <div key={index}>
