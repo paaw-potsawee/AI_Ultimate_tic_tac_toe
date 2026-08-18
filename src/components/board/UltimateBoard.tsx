@@ -6,9 +6,9 @@ const UltimateBoard = () => {
         useBoardStore();
     return (
         <>
-            {winner && (
+            {winner !== null && (
                 <div className="text-2xl font-bold text-green-500">
-                    Winner: {winner}
+                    Winner: {winner === 0 ? "X" : "O"}
                 </div>
             )}
             <div className="grid grid-rows-3 p-4 max-w-5xl">

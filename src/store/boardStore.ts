@@ -1,54 +1,35 @@
 import { useSyncExternalStore } from "react";
-import { type MoveRecord } from "../types/game";
+import type { CellPosition } from "../types/board";
+import { type Move, type Player } from "../types/game";
 import {
-    cloneUltimateBoard,
-    getUltimateBoard,
+    applyMove,
     checkGameWinner,
-    checkWinner,
-    isAvailableCell,
     getAvailableLocalBoards,
+    getUltimateBoard,
+    isAvailableCell,
+    toRenderBoard,
     back,
 } from "../lib/game";
-import {
-    type CellClickProps,
-    type Player,
-    type UltimateBoard,
-} from "../types/board";
 
-let board: UltimateBoard = getUltimateBoard();
-let currentPlayer: Player = "X";
-let availableLocalBoards: { localRow: number; localCol: number }[] = Array.from(
-    { length: 3 },
-    (_, row) =>
-        Array.from({ length: 3 }, (_, col) => ({
-            localRow: row,
-            localCol: col,
-        })),
-).flat();
-
+let state = getUltimateBoard();
+let currentPlayer: Player = 0;
 let winner: Player | null = null;
-let history: MoveRecord[] = [];
+let history: Move[] = [];
+let availableLocalBoards: CellPosition[] = getAvailableLocalBoards(
+    state,
+    history,
+);
+let boardSnapshot = toRenderBoard(state);
+
 const listeners: Set<() => void> = new Set();
 
 const emit = () => {
     listeners.forEach((cb) => cb());
 };
 
-export const useBoardStore = () => {
-    const store = useSyncExternalStore(
-        BoardStore.subscribe,
-        BoardStore.getBoard,
-    );
-    return {
-        board: store,
-        clearBoard: BoardStore.clearBoard,
-        handleCellClick: BoardStore.handleCellClick,
-        back: BoardStore.back,
-        currentPlayer,
-        winner,
-        history,
-        availableLocalBoards,
-    };
+const refreshAvailableBoards = () => {
+    availableLocalBoards = getAvailableLocalBoards(state, history);
+    boardSnapshot = toRenderBoard(state);
 };
 
 const BoardStore = {
@@ -57,78 +38,87 @@ const BoardStore = {
         return () => listeners.delete(cb);
     },
     getBoard() {
-        return board;
+        return boardSnapshot;
     },
     clearBoard() {
-        board = getUltimateBoard();
-        availableLocalBoards = Array.from({ length: 3 }, (_, row) =>
-            Array.from({ length: 3 }, (_, col) => ({
-                localRow: row,
-                localCol: col,
-            })),
-        ).flat();
-        currentPlayer = "X";
+        state = getUltimateBoard();
+        currentPlayer = 0;
         winner = null;
         history = [];
+        refreshAvailableBoards();
         emit();
     },
-    handleCellClick({ localRow, localCol, cellRow, cellCol }: CellClickProps) {
-        console.log(
-            `Cell clicked: localRow=${localRow}, localCol=${localCol}, cellRow=${cellRow}, cellCol=${cellCol}`,
-        );
-        if (board[localRow][localCol].board[cellRow][cellCol] !== null) {
-            return;
-        }
-        if (board[localRow][localCol].winner !== null) {
-            return;
-        }
+    handleCellClick({ localRow, localCol, cellRow, cellCol }: CellPosition) {
         if (winner !== null) {
             return;
         }
         if (
             !isAvailableCell(
                 { localRow, localCol, cellRow, cellCol },
-                board,
+                state,
                 history,
             )
         ) {
             return;
         }
 
-        // create new board and update the cell with current player
-        const nextBoard = cloneUltimateBoard(board);
-        nextBoard[localRow][localCol].board[cellRow][cellCol] = currentPlayer;
+        const boardIndex = localRow * 3 + localCol;
+        const cellIndex = cellRow * 3 + cellCol;
 
-        // append move to history
+        const nextState = applyMove(
+            state,
+            currentPlayer,
+            boardIndex,
+            cellIndex,
+        );
+
         history = [
             ...history,
-            { player: currentPlayer, localRow, localCol, cellRow, cellCol },
+            {
+                // player: currentPlayer,
+                // localRow,
+                // localCol,
+                // cellRow,
+                // cellCol,
+                board: boardIndex,
+                cell: cellIndex,
+            },
         ];
 
-        // update available local boards based on the last move
-        availableLocalBoards = getAvailableLocalBoards(nextBoard, history);
-
-        // check local board winner
-        const localWinner = checkWinner(nextBoard[localRow][localCol].board);
-        nextBoard[localRow][localCol].winner = localWinner;
-
-        // check ultimate board winner
-        winner = checkGameWinner(nextBoard);
-        board = nextBoard;
-        currentPlayer = currentPlayer === "X" ? "O" : "X";
+        winner = checkGameWinner(nextState);
+        state = nextState;
+        currentPlayer = nextState.player;
+        refreshAvailableBoards();
         emit();
     },
     back() {
-        const { ultimateBoard, history: newHistory } = back(board, history);
-        board = ultimateBoard;
-        history = newHistory;
-
-        // update current player
-        currentPlayer = history.length % 2 === 0 ? "X" : "O";
-        // update available local boards based on the last move
-        availableLocalBoards = getAvailableLocalBoards(board, history);
-        // remove winner if the last move was a winning move
-        winner = checkGameWinner(board);
+        if (history.length === 0) {
+            return;
+        }
+        const result = back(state, history);
+        state = result.state;
+        history = result.history;
+        currentPlayer = state.player;
+        winner = checkGameWinner(state);
+        refreshAvailableBoards();
         emit();
     },
+};
+
+export const useBoardStore = () => {
+    const board = useSyncExternalStore(
+        BoardStore.subscribe,
+        BoardStore.getBoard,
+    );
+
+    return {
+        board,
+        clearBoard: BoardStore.clearBoard,
+        handleCellClick: BoardStore.handleCellClick,
+        back: BoardStore.back,
+        currentPlayer: currentPlayer === 0 ? "X" : "O",
+        winner,
+        history,
+        availableLocalBoards,
+    };
 };

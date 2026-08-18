@@ -1,158 +1,249 @@
-import {
-    type LocalBoard,
-    type Move,
-    type UltimateBoard,
-    type CellClickProps,
-} from "../types/board";
-import { type MoveRecord } from "../types/game";
+import type { CellPosition, RenderBoard } from "../types/board";
+import type { GameState, Move, Player } from "../types/game";
 
-export const getLocalBoard = (): LocalBoard => ({
-    board: Array.from({ length: 3 }, () => Array<Move>(3).fill(null)),
-    winner: null,
-});
-
-export const getUltimateBoard = (): UltimateBoard =>
-    Array.from({ length: 3 }, () =>
-        Array.from({ length: 3 }, () => getLocalBoard()),
-    );
-
-export const cloneUltimateBoard = (board: UltimateBoard): UltimateBoard =>
-    board.map((localRow) =>
-        localRow.map((localBoard) => ({
-            ...localBoard,
-            board: localBoard.board.map((row) => [...row]),
-        })),
-    );
-
-export const checkGameWinner = (board: UltimateBoard): Move => {
-    // create move[][] map from localboard winners
-    const moveMap: Move[][] = board.map((localRow) =>
-        localRow.map((localBoard) => localBoard.winner),
-    );
-    return checkWinner(moveMap);
+export const getUltimateBoard = (): GameState => {
+    return {
+        x: new Uint16Array(9),
+        o: new Uint16Array(9),
+        wonX: 0,
+        wonO: 0,
+        nextBoard: 9,
+        player: 0,
+    };
 };
 
-// create function to check move[][] map for winner
-export const checkWinner = (moveMap: Move[][]): Move => {
-    // check rows
-    for (let i = 0; i < 3; i++) {
-        if (
-            moveMap[i][0] !== null &&
-            moveMap[i][0] === moveMap[i][1] &&
-            moveMap[i][1] === moveMap[i][2]
-        ) {
-            return moveMap[i][0];
-        }
-    }
-    // check columns
-    for (let i = 0; i < 3; i++) {
-        if (
-            moveMap[0][i] !== null &&
-            moveMap[0][i] === moveMap[1][i] &&
-            moveMap[1][i] === moveMap[2][i]
-        ) {
-            return moveMap[0][i];
-        }
-    }
-    // check diagonals
+const WIN_MASKS = [
+    0b000000111, 0b000111000, 0b111000000, 0b001001001, 0b010010010,
+    0b100100100, 0b100010001, 0b001010100,
+];
+
+const isBoardFull = (boardMask: number): boolean => {
+    return boardMask === 0b111111111;
+};
+
+const getBoardIndexFromCell = (cellRow: number, cellCol: number): number => {
+    return cellRow * 3 + cellCol;
+};
+
+const getAvailableBoardIndex = (state: GameState, lastMove: Move): number => {
+    const cellRow = Math.floor(lastMove.cell / 3);
+    const cellCol = lastMove.cell % 3;
+    const forcedBoardIndex = getBoardIndexFromCell(cellRow, cellCol);
+
     if (
-        moveMap[0][0] !== null &&
-        moveMap[0][0] === moveMap[1][1] &&
-        moveMap[1][1] === moveMap[2][2]
+        (state.wonX & (1 << forcedBoardIndex)) !== 0 ||
+        (state.wonO & (1 << forcedBoardIndex)) !== 0 ||
+        isBoardFull(state.x[forcedBoardIndex] | state.o[forcedBoardIndex])
     ) {
-        return moveMap[0][0];
+        return 9;
     }
-    if (
-        moveMap[0][2] !== null &&
-        moveMap[0][2] === moveMap[1][1] &&
-        moveMap[1][1] === moveMap[2][0]
-    ) {
-        return moveMap[0][2];
-    }
+    return forcedBoardIndex;
+};
+
+export const cloneUltimateBoard = (state: GameState): GameState => {
+    return {
+        ...state,
+        x: new Uint16Array(state.x),
+        o: new Uint16Array(state.o),
+    };
+};
+
+export const checkWinner = (board: number): boolean => {
+    return WIN_MASKS.some((mask) => (board & mask) === mask);
+};
+
+export const checkGameWinner = (state: GameState): Player | null => {
+    if (checkWinner(state.wonX)) return 0;
+    if (checkWinner(state.wonO)) return 1;
     return null;
 };
 
-const hasPlayableCell = (board: LocalBoard): boolean =>
-    board.winner === null &&
-    board.board.some((row) => row.some((cell) => cell === null));
+export const toRenderBoard = (state: GameState): RenderBoard => {
+    const renderBoard: RenderBoard = Array.from({ length: 3 }, () =>
+        Array.from({ length: 3 }, () => ({
+            board: Array.from({ length: 3 }, () => Array(3).fill(null)),
+            winner: null,
+        })),
+    );
 
-export const isAvailableCell = (
-    coor: CellClickProps,
-    ultimateBoard: UltimateBoard,
-    history: MoveRecord[],
-): boolean => {
-    // check if local board is available
-    const { localRow, localCol, cellRow, cellCol } = coor;
-    const localBoard = ultimateBoard[localRow][localCol];
+    for (let localBoard = 0; localBoard < 9; localBoard += 1) {
+        const localRow = Math.floor(localBoard / 3);
+        const localCol = localBoard % 3;
 
-    if (localBoard.winner !== null) return false;
-    if (localBoard.board[cellRow][cellCol] !== null) return false;
+        for (let cell = 0; cell < 9; cell += 1) {
+            const bit = 1 << cell;
+            const cellRow = Math.floor(cell / 3);
+            const cellCol = cell % 3;
 
-    // check if the move is valid based on the last move
-    if (history.length > 0) {
-        const lastMove = history[history.length - 1];
-        const requiredRow = lastMove.cellRow;
-        const requiredCol = lastMove.cellCol;
+            const isX = (state.x[localBoard] & bit) !== 0;
+            const isO = (state.o[localBoard] & bit) !== 0;
 
-        if (requiredRow !== localRow || requiredCol !== localCol) {
-            const requiredLocalBoard = ultimateBoard[requiredRow][requiredCol];
-            if (hasPlayableCell(requiredLocalBoard)) {
-                return false;
-            }
+            renderBoard[localRow][localCol].board[cellRow][cellCol] = isX
+                ? "X"
+                : isO
+                  ? "O"
+                  : null;
+        }
+
+        if ((state.wonX & (1 << localBoard)) !== 0) {
+            renderBoard[localRow][localCol].winner = "X";
+        } else if ((state.wonO & (1 << localBoard)) !== 0) {
+            renderBoard[localRow][localCol].winner = "O";
         }
     }
+
+    return renderBoard;
+};
+
+export const isAvailableCell = (
+    pos: CellPosition,
+    state: GameState,
+    history: Move[],
+): boolean => {
+    const { localRow, localCol, cellRow, cellCol } = pos;
+    const boardIndex = localRow * 3 + localCol;
+    const cellIndex = cellRow * 3 + cellCol;
+
+    if (boardIndex < 0 || boardIndex > 8) {
+        return false;
+    }
+
+    if (state.nextBoard !== 9 && state.nextBoard !== boardIndex) {
+        return false;
+    }
+
+    if (
+        (state.wonX & (1 << boardIndex)) !== 0 ||
+        (state.wonO & (1 << boardIndex)) !== 0
+    ) {
+        return false;
+    }
+
+    const occupied =
+        (state.x[boardIndex] & (1 << cellIndex)) !== 0 ||
+        (state.o[boardIndex] & (1 << cellIndex)) !== 0;
+    if (occupied) {
+        return false;
+    }
+
+    if (isBoardFull(state.x[boardIndex] | state.o[boardIndex])) {
+        return false;
+    }
+
+    void history;
     return true;
 };
 
 export const getAvailableLocalBoards = (
-    ultimateBoard: UltimateBoard,
-    history: MoveRecord[],
-): { localRow: number; localCol: number }[] => {
-    const availableBoards: { localRow: number; localCol: number }[] = [];
+    state: GameState,
+    history: Move[],
+): CellPosition[] => {
+    void history;
+    const boardPositions: CellPosition[] = [];
 
-    if (history.length > 0) {
-        const lastMove = history[history.length - 1];
-        const requiredRow = lastMove.cellRow;
-        const requiredCol = lastMove.cellCol;
+    const boards =
+        state.nextBoard === 9 ? [0, 1, 2, 3, 4, 5, 6, 7, 8] : [state.nextBoard];
 
-        const requiredLocalBoard = ultimateBoard[requiredRow][requiredCol];
-        if (hasPlayableCell(requiredLocalBoard)) {
-            availableBoards.push({
-                localRow: requiredRow,
-                localCol: requiredCol,
-            });
-            return availableBoards;
+    for (const boardIndex of boards) {
+        if (
+            (state.wonX & (1 << boardIndex)) !== 0 ||
+            (state.wonO & (1 << boardIndex)) !== 0
+        ) {
+            continue;
+        }
+
+        if (isBoardFull(state.x[boardIndex] | state.o[boardIndex])) {
+            continue;
+        }
+
+        const localRow = Math.floor(boardIndex / 3);
+        const localCol = boardIndex % 3;
+
+        boardPositions.push({
+            localRow,
+            localCol,
+            cellRow: 0,
+            cellCol: 0,
+        });
+    }
+
+    return boardPositions;
+};
+
+export const applyMove = (
+    state: GameState,
+    player: Player,
+    boardIndex: number,
+    cellIndex: number,
+): GameState => {
+    const nextState = cloneUltimateBoard(state);
+    const bit = 1 << cellIndex;
+
+    if (player === 0) {
+        nextState.x[boardIndex] |= bit;
+    } else {
+        nextState.o[boardIndex] |= bit;
+    }
+
+    const localBoardMask =
+        player === 0 ? nextState.x[boardIndex] : nextState.o[boardIndex];
+
+    if (checkWinner(localBoardMask)) {
+        if (player === 0) {
+            nextState.wonX |= 1 << boardIndex;
+        } else {
+            nextState.wonO |= 1 << boardIndex;
         }
     }
 
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-            if (hasPlayableCell(ultimateBoard[i][j])) {
-                availableBoards.push({ localRow: i, localCol: j });
-            }
-        }
-    }
+    nextState.nextBoard = getAvailableBoardIndex(nextState, {
+        board: boardIndex,
+        cell: cellIndex,
+    });
 
-    return availableBoards;
+    nextState.player = player === 0 ? 1 : 0;
+    return nextState;
 };
 
 export const back = (
-    ultimateBoard: UltimateBoard,
-    history: MoveRecord[],
-): { ultimateBoard: UltimateBoard; history: MoveRecord[] } => {
+    state: GameState,
+    history: Move[],
+): {
+    state: GameState;
+    history: Move[];
+} => {
     if (history.length === 0) {
-        return { ultimateBoard, history };
+        return { state: cloneUltimateBoard(state), history };
     }
 
-    const { localRow, localCol, cellRow, cellCol } =
-        history.pop() as MoveRecord;
+    const previousState = cloneUltimateBoard(state);
+    const lastMove = history[history.length - 1];
+    const cellBit = 1 << lastMove.cell;
+    const board = lastMove.board;
 
-    // Clone the ultimate board to avoid mutating the original
-    const newUltimateBoard = cloneUltimateBoard(ultimateBoard);
-    newUltimateBoard[localRow][localCol].board[cellRow][cellCol] = null;
-    newUltimateBoard[localRow][localCol].winner = checkWinner(
-        newUltimateBoard[localRow][localCol].board,
+    if (state.player === 1) {
+        previousState.x[board] &= ~cellBit;
+        previousState.player = 0;
+        if (previousState.wonX & (1 << board)) {
+            previousState.wonX &= ~(1 << board);
+        }
+    } else {
+        previousState.o[board] &= ~cellBit;
+        previousState.player = 1;
+        if (previousState.wonO & (1 << board)) {
+            previousState.wonO &= ~(1 << board);
+        }
+    }
+
+    if (history.length === 1) {
+        previousState.nextBoard = 9;
+        return { state: previousState, history: [] };
+    }
+    const secondLastMove = history[history.length - 2];
+    previousState.nextBoard = getAvailableBoardIndex(
+        previousState,
+        secondLastMove,
     );
-    history = [...history];
-    return { ultimateBoard: newUltimateBoard, history };
+
+    return { state: previousState, history: history.slice(0, -1) };
 };
