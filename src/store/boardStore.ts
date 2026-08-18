@@ -75,11 +75,6 @@ const BoardStore = {
         history = [
             ...history,
             {
-                // player: currentPlayer,
-                // localRow,
-                // localCol,
-                // cellRow,
-                // cellCol,
                 board: boardIndex,
                 cell: cellIndex,
             },
