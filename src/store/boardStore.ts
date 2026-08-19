@@ -154,7 +154,11 @@ const BoardStore = {
         refreshAvailableBoards();
         emit();
 
-        if (option !== GameMode.PVP && winner === null && currentPlayer !== humanPlayer) {
+        if (
+            option !== GameMode.PVP &&
+            winner === null &&
+            currentPlayer !== humanPlayer
+        ) {
             doAiMove();
         }
     },

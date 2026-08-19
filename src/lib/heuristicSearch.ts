@@ -11,7 +11,9 @@ export const evaluateHeuristic = (state: GameState): number => {
     return randomIndex; // Return a random index as heuristic value
 };
 
-export const getAiMove = (state: GameState): { board: number; cell: number } => {
+export const getAiMove = (
+    state: GameState,
+): { board: number; cell: number } => {
     const availableMoves = getAvailableMoves(state);
     const index = evaluateHeuristic(state);
     const encoded = availableMoves[index];

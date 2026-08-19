@@ -3,8 +3,15 @@ import { useBoardStore, useOptionStore } from "../../store/boardStore";
 import { gameModeOptions, parseGameMode, GameMode } from "../../types/gameMode";
 
 const UltimateBoard = () => {
-    const { board, clearBoard, back, currentPlayer, winner, history, isAiTurn } =
-        useBoardStore();
+    const {
+        board,
+        clearBoard,
+        back,
+        currentPlayer,
+        winner,
+        history,
+        isAiTurn,
+    } = useBoardStore();
     const { option, setOption, humanPlayer, setHumanPlayer } = useOptionStore();
     return (
         <>
