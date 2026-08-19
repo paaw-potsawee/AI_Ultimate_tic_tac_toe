@@ -1,16 +1,37 @@
 import LocalBoard from "./LocalBoard";
 import { useBoardStore, useOptionStore } from "../../store/boardStore";
-import { gameModeOptions, parseGameMode } from "../../types/gameMode";
+import { gameModeOptions, parseGameMode, GameMode } from "../../types/gameMode";
 
 const UltimateBoard = () => {
-    const { board, clearBoard, back, currentPlayer, winner, history } =
+    const { board, clearBoard, back, currentPlayer, winner, history, isAiTurn } =
         useBoardStore();
-    const { option, setOption } = useOptionStore();
+    const { option, setOption, humanPlayer, setHumanPlayer } = useOptionStore();
     return (
         <>
+            {option !== GameMode.PVP && (
+                <div className="flex gap-4 mb-4">
+                    <button
+                        className={`border p-2 ${humanPlayer === 0 ? "bg-slate-700" : "hover:bg-slate-500"}`}
+                        onClick={() => setHumanPlayer(0)}
+                    >
+                        Play as X
+                    </button>
+                    <button
+                        className={`border p-2 ${humanPlayer === 1 ? "bg-slate-700" : "hover:bg-slate-500"}`}
+                        onClick={() => setHumanPlayer(1)}
+                    >
+                        Play as O
+                    </button>
+                </div>
+            )}
             {winner !== null && (
                 <div className="text-2xl font-bold text-green-500">
                     Winner: {winner === 0 ? "X" : "O"}
+                </div>
+            )}
+            {isAiTurn && (
+                <div className="text-xl font-bold text-blue-400">
+                    AI is thinking...
                 </div>
             )}
             <div className="grid grid-rows-3 p-4 max-w-5xl">

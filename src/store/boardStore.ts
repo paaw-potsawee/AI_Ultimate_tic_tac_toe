@@ -10,7 +10,8 @@ import {
     toRenderBoard,
     back,
 } from "../lib/game";
-import type { GameModeValue } from "../types/gameMode";
+import { GameMode, type GameModeValue } from "../types/gameMode";
+import { getAiMove } from "../lib/heuristicSearch";
 
 let state = getUltimateBoard();
 let currentPlayer: Player = 0;
@@ -22,6 +23,8 @@ let availableLocalBoards: CellPosition[] = getAvailableLocalBoards(
 );
 let option: GameModeValue = 1;
 let boardSnapshot = toRenderBoard(state);
+let humanPlayer: Player = 0;
+let isAiTurn = false;
 
 const listeners: Set<() => void> = new Set();
 const optionListeners: Set<() => void> = new Set();
@@ -35,6 +38,40 @@ const refreshAvailableBoards = () => {
     boardSnapshot = toRenderBoard(state);
 };
 
+const doAiMove = () => {
+    if (winner !== null || option === GameMode.PVP) return;
+
+    isAiTurn = true;
+    emit();
+
+    setTimeout(() => {
+        if (!isAiTurn) return; // Prevent executing if board was cleared
+
+        const move = getAiMove(state);
+        const nextState = applyMove(
+            state,
+            currentPlayer,
+            move.board,
+            move.cell,
+        );
+
+        history = [
+            ...history,
+            {
+                board: move.board,
+                cell: move.cell,
+            },
+        ];
+
+        winner = checkGameWinner(nextState);
+        state = nextState;
+        currentPlayer = nextState.player;
+        isAiTurn = false;
+        refreshAvailableBoards();
+        emit();
+    }, 999);
+};
+
 const BoardStore = {
     subscribe(cb: () => void) {
         listeners.add(cb);
@@ -42,6 +79,9 @@ const BoardStore = {
     },
     getBoard() {
         return boardSnapshot;
+    },
+    getIsAiTurn() {
+        return isAiTurn;
     },
     subscribeOption(cb: () => void) {
         optionListeners.add(cb);
@@ -55,16 +95,29 @@ const BoardStore = {
         option = newOption;
         optionListeners.forEach((cb) => cb());
     },
+    getHumanPlayer() {
+        return humanPlayer;
+    },
+    setHumanPlayer(player: Player) {
+        if (humanPlayer === player) return;
+        humanPlayer = player;
+        optionListeners.forEach((cb) => cb());
+        BoardStore.clearBoard();
+    },
     clearBoard() {
         state = getUltimateBoard();
         currentPlayer = 0;
         winner = null;
         history = [];
+        isAiTurn = false;
         refreshAvailableBoards();
         emit();
+        if (option !== GameMode.PVP && currentPlayer !== humanPlayer) {
+            doAiMove();
+        }
     },
     handleCellClick({ localRow, localCol, cellRow, cellCol }: CellPosition) {
-        if (winner !== null) {
+        if (winner !== null || isAiTurn) {
             return;
         }
         if (
@@ -100,16 +153,28 @@ const BoardStore = {
         currentPlayer = nextState.player;
         refreshAvailableBoards();
         emit();
+
+        if (option !== GameMode.PVP && winner === null && currentPlayer !== humanPlayer) {
+            doAiMove();
+        }
     },
     back() {
-        if (history.length === 0) {
+        if (history.length === 0 || isAiTurn) {
             return;
         }
-        const result = back(state, history);
+        let result = back(state, history);
         state = result.state;
         history = result.history;
+
+        if (option !== GameMode.PVP && history.length > 0) {
+            result = back(state, history);
+            state = result.state;
+            history = result.history;
+        }
+
         currentPlayer = state.player;
         winner = checkGameWinner(state);
+        isAiTurn = false;
         refreshAvailableBoards();
         emit();
     },
@@ -119,6 +184,10 @@ export const useBoardStore = () => {
     const board = useSyncExternalStore(
         BoardStore.subscribe,
         BoardStore.getBoard,
+    );
+    const isAiTurn = useSyncExternalStore(
+        BoardStore.subscribe,
+        BoardStore.getIsAiTurn,
     );
 
     return {
@@ -130,6 +199,7 @@ export const useBoardStore = () => {
         winner,
         history,
         availableLocalBoards,
+        isAiTurn,
     };
 };
 
@@ -138,9 +208,15 @@ export const useOptionStore = () => {
         BoardStore.subscribeOption,
         BoardStore.getOption,
     );
+    const humanPlayer = useSyncExternalStore(
+        BoardStore.subscribeOption,
+        BoardStore.getHumanPlayer,
+    );
 
     return {
         option,
         setOption: BoardStore.setOption,
+        humanPlayer,
+        setHumanPlayer: BoardStore.setHumanPlayer,
     };
 };
