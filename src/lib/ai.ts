@@ -3,14 +3,17 @@ import type { GameState, Move } from "../types/game";
 import { getAvailableMoves } from "./game";
 import { evaluateHeuristic } from "./heuristicSearch";
 import { GameMode } from "../types/gameMode";
-import { evaluateDFS } from "./blindSearch";
+import { evaluateDFS, evaluateBFS } from "./blindSearch";
 
 export const getAiMove = (state: GameState, option: GameModeValue): Move => {
     const availableMoves = getAvailableMoves(state);
     let index: number;
     switch (option) {
-        case GameMode.BLIND_AI:
+        case GameMode.BLIND_DFS_AI:
             index = evaluateDFS(state);
+            break;
+        case GameMode.BLIND_BFS_AI:
+            index = evaluateBFS(state);
             break;
         case GameMode.HEURISTIC_AI:
             index = evaluateHeuristic(state);
