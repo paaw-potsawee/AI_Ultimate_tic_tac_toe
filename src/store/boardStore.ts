@@ -11,7 +11,7 @@ import {
     back,
 } from "../lib/game";
 import { GameMode, type GameModeValue } from "../types/gameMode";
-import { getAiMove } from "../lib/heuristicSearch";
+import { getAiMove } from "../lib/ai";
 
 let state = getUltimateBoard();
 let currentPlayer: Player = 0;
@@ -47,7 +47,7 @@ const doAiMove = () => {
     setTimeout(() => {
         if (!isAiTurn) return; // Prevent executing if board was cleared
 
-        const move = getAiMove(state);
+        const move = getAiMove(state, option);
         const nextState = applyMove(
             state,
             currentPlayer,
