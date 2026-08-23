@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+@theme {
+    /* Ocean Sunset palette */
+    --color-ocean-950: #001219;
+    --color-ocean-800: #005F73;
+    --color-ocean-600: #0A9396;
+    --color-ocean-400: #94D2BD;
+    --color-ocean-200: #E9D8A6;
+
+    --color-sunset-400: #EE9B00;
+    --color-sunset-500: #CA6702;
+    --color-sunset-600: #BB3E03;
+    --color-sunset-700: #AE2012;
+    --color-sunset-900: #9B2226;
+}
+
 @layer base {
     html {
         @apply bg-slate-900 text-slate-50;
