@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @theme {
-    /* Ocean Sunset palette */
     --color-ocean-950: #001219;
     --color-ocean-800: #005F73;
     --color-ocean-600: #0A9396;
@@ -13,29 +12,21 @@
     --color-sunset-600: #BB3E03;
     --color-sunset-700: #AE2012;
     --color-sunset-900: #9B2226;
+
+    --color-burgundy: #562b35;
+    --color-orange: #ff9810;
+    --color-teal: #24a7a1;
+    --color-peach: #fd975c;
+    --color-black: #000000;
 }
 
 @layer base {
     html {
-        @apply bg-slate-900 text-slate-50;
+        @apply bg-teal;
     }
 
     body {
-        @apply min-h-screen bg-slate-900 text-slate-50 antialiased;
-    }
-
-    * {
-        @apply border-slate-700;
-    }
-
-    button {
-        @apply transition-colors duration-200 hover:cursor-pointer;
-    }
-
-    input,
-    select,
-    textarea {
-        @apply rounded-md border border-slate-600 bg-slate-800 text-slate-50 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30;
+        @apply min-h-screen antialiased;
     }
 
     h1 {
@@ -43,14 +34,18 @@
     }
 
     h2 {
-        @apply text-3xl font-semibold tracking-tight;
+        @apply text-3xl font-bold tracking-tight;
     }
 
     h3 {
-        @apply text-2xl font-semibold;
+        @apply text-2xl font-semibold tracking-tight;
     }
 
     a {
-        @apply text-blue-400 hover:text-blue-300 transition-colors;
+        @apply transition-colors;
+    }
+
+    button {
+        @apply hover:cursor-pointer; 
     }
 }
