@@ -1,8 +1,11 @@
 import LocalBoard from "./LocalBoard";
-import { useBoardStore, useOptionStore } from "../../store/boardStore";
-import { gameModeOptions, parseGameMode, GameMode } from "../../types/gameMode";
+import { useBoardStore, useGameConfigStore } from "../../store/boardStore";
 
-const UltimateBoard = () => {
+interface Props {
+    onBackToSetup: () => void;
+}
+
+const UltimateBoard = ({ onBackToSetup }: Props) => {
     const {
         board,
         clearBoard,
@@ -12,25 +15,14 @@ const UltimateBoard = () => {
         history,
         isAiTurn,
     } = useBoardStore();
-    const { option, setOption, humanPlayer, setHumanPlayer } = useOptionStore();
+    const { mode, leaveGame } = useGameConfigStore();
+
+    const handleBackToSetup = () => {
+        leaveGame();
+        onBackToSetup();
+    };
     return (
         <>
-            {option !== GameMode.PVP && (
-                <div className="flex gap-4 mb-4">
-                    <button
-                        className={`border p-2 ${humanPlayer === 0 ? "bg-slate-700" : "hover:bg-slate-500"}`}
-                        onClick={() => setHumanPlayer(0)}
-                    >
-                        Play as X
-                    </button>
-                    <button
-                        className={`border p-2 ${humanPlayer === 1 ? "bg-slate-700" : "hover:bg-slate-500"}`}
-                        onClick={() => setHumanPlayer(1)}
-                    >
-                        Play as O
-                    </button>
-                </div>
-            )}
             {winner !== null && (
                 <div className="text-2xl font-bold text-green-500">
                     Winner: {winner === 0 ? "X" : "O"}
@@ -57,7 +49,7 @@ const UltimateBoard = () => {
                 })}
             </div>
             <div>
-                current player: {currentPlayer} playing vs {option}
+                current player: {currentPlayer} playing vs {mode}
             </div>
             <button className="border p-2 hover:bg-slate-500" onClick={back}>
                 back
@@ -68,16 +60,12 @@ const UltimateBoard = () => {
             >
                 Reset
             </button>
-            <select
-                value={option}
-                onChange={(e) => setOption(parseGameMode(e.target.value))}
+            <button
+                className="border p-2 hover:bg-slate-500"
+                onClick={handleBackToSetup}
             >
-                {gameModeOptions.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                        {label}
-                    </option>
-                ))}
-            </select>
+                Back to setup
+            </button>
             <div className="text-sm text-gray-400 mt-2">
                 {history.map((move, index) => (
                     <div key={index}>

@@ -52,7 +52,10 @@ export const getAvailableMoves = (state: GameState): number[] => {
     return availableMoves;
 };
 
-const getAvailableBoardIndex = (state: GameState, lastMove: Move): number => {
+const getAvailableBoardIndex = (
+    state: GameState,
+    lastMove: Pick<Move, "cell">,
+): number => {
     const cellRow = Math.floor(lastMove.cell / 3);
     const cellCol = lastMove.cell % 3;
     const forcedBoardIndex = getBoardIndexFromCell(cellRow, cellCol);
@@ -224,7 +227,6 @@ export const applyMove = (
     }
 
     nextState.nextBoard = getAvailableBoardIndex(nextState, {
-        board: boardIndex,
         cell: cellIndex,
     });
 

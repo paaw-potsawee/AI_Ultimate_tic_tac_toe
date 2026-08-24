@@ -24,6 +24,11 @@ export const getAiMove = (state: GameState, option: GameModeValue): Move => {
 
     const encoded = availableMoves[index];
     return {
+        player: state.player,
+        localRow: Math.floor(Math.floor(encoded / 9) / 3),
+        localCol: Math.floor(encoded / 9) % 3,
+        cellRow: Math.floor((encoded % 9) / 3),
+        cellCol: (encoded % 9) % 3,
         board: Math.floor(encoded / 9),
         cell: encoded % 9,
     };

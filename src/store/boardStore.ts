@@ -25,6 +25,7 @@ let option: GameModeValue = 1;
 let boardSnapshot = toRenderBoard(state);
 let humanPlayer: Player = 0;
 let isAiTurn = false;
+let aiTimer: ReturnType<typeof setTimeout> | null = null;
 
 const listeners: Set<() => void> = new Set();
 const optionListeners: Set<() => void> = new Set();
@@ -44,8 +45,9 @@ const doAiMove = () => {
     isAiTurn = true;
     emit();
 
-    setTimeout(() => {
-        if (!isAiTurn) return; // Prevent executing if board was cleared
+    aiTimer = setTimeout(() => {
+        aiTimer = null;
+        if (!isAiTurn) return;
 
         const move = getAiMove(state, option);
         const nextState = applyMove(
@@ -58,6 +60,11 @@ const doAiMove = () => {
         history = [
             ...history,
             {
+                player: currentPlayer,
+                localRow: Math.floor(move.board / 3),
+                localCol: move.board % 3,
+                cellRow: Math.floor(move.cell / 3),
+                cellCol: move.cell % 3,
                 board: move.board,
                 cell: move.cell,
             },
@@ -102,9 +109,22 @@ const BoardStore = {
         if (humanPlayer === player) return;
         humanPlayer = player;
         optionListeners.forEach((cb) => cb());
+    },
+    startGame(newOption: GameModeValue, newHumanPlayer: Player) {
+        option = newOption;
+        humanPlayer = newHumanPlayer;
+        optionListeners.forEach((cb) => cb());
         BoardStore.clearBoard();
     },
+    leaveGame() {
+        if (aiTimer !== null) {
+            clearTimeout(aiTimer);
+            aiTimer = null;
+        }
+        isAiTurn = false;
+    },
     clearBoard() {
+        BoardStore.leaveGame();
         state = getUltimateBoard();
         currentPlayer = 0;
         winner = null;
@@ -143,6 +163,11 @@ const BoardStore = {
         history = [
             ...history,
             {
+                player: currentPlayer,
+                localRow,
+                localCol,
+                cellRow,
+                cellCol,
                 board: boardIndex,
                 cell: cellIndex,
             },
@@ -207,7 +232,7 @@ export const useBoardStore = () => {
     };
 };
 
-export const useOptionStore = () => {
+export const useGameConfigStore = () => {
     const option = useSyncExternalStore(
         BoardStore.subscribeOption,
         BoardStore.getOption,
@@ -218,9 +243,11 @@ export const useOptionStore = () => {
     );
 
     return {
-        option,
-        setOption: BoardStore.setOption,
+        mode: option,
+        setMode: BoardStore.setOption,
         humanPlayer,
         setHumanPlayer: BoardStore.setHumanPlayer,
+        startGame: BoardStore.startGame,
+        leaveGame: BoardStore.leaveGame,
     };
 };

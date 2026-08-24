@@ -2,6 +2,11 @@
 export type Player = 0 | 1;
 
 export interface Move {
+    player: Player;
+    localRow: number;
+    localCol: number;
+    cellRow: number;
+    cellCol: number;
     board: number;
     cell: number;
 }
