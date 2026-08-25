@@ -1,5 +1,5 @@
 const O = () => {
-  return <div>O</div>
-}
+    return <div>O</div>;
+};
 
 export default O;

@@ -15,7 +15,8 @@ interface Props {
 const GameSetup = ({ onStartGame }: Props) => {
     const { mode, humanPlayer, startGame } = useGameConfigStore();
     const [draftMode, setDraftMode] = useState<GameModeValue>(mode);
-    const [draftHumanPlayer, setDraftHumanPlayer] = useState<Player>(humanPlayer);
+    const [draftHumanPlayer, setDraftHumanPlayer] =
+        useState<Player>(humanPlayer);
 
     const handleStartGame = () => {
         startGame(draftMode, draftHumanPlayer);

@@ -2,16 +2,16 @@
 
 @theme {
     --color-ocean-950: #001219;
-    --color-ocean-800: #005F73;
-    --color-ocean-600: #0A9396;
-    --color-ocean-400: #94D2BD;
-    --color-ocean-200: #E9D8A6;
+    --color-ocean-800: #005f73;
+    --color-ocean-600: #0a9396;
+    --color-ocean-400: #94d2bd;
+    --color-ocean-200: #e9d8a6;
 
-    --color-sunset-400: #EE9B00;
-    --color-sunset-500: #CA6702;
-    --color-sunset-600: #BB3E03;
-    --color-sunset-700: #AE2012;
-    --color-sunset-900: #9B2226;
+    --color-sunset-400: #ee9b00;
+    --color-sunset-500: #ca6702;
+    --color-sunset-600: #bb3e03;
+    --color-sunset-700: #ae2012;
+    --color-sunset-900: #9b2226;
 
     --color-burgundy: #562b35;
     --color-orange: #ff9810;
@@ -46,6 +46,6 @@
     }
 
     button {
-        @apply hover:cursor-pointer; 
+        @apply hover:cursor-pointer;
     }
 }
