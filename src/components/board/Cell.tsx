@@ -10,7 +10,7 @@ const Cell = ({ cellClickProps }: CellProps) => {
     const { localRow, localCol, cellRow, cellCol } = cellClickProps;
     return (
         <button
-            className={`flex items-center justify-center w-full aspect-square border border-slate-600 ${isAiTurn ? "opacity-70 cursor-not-allowed" : "hover:bg-slate-700"}`}
+            className={`flex items-center justify-center w-[10vw] max-w-20 aspect-square border border-slate-600 ${isAiTurn ? "opacity-70 cursor-not-allowed" : "hover:bg-slate-700"}`}
             onClick={() => handleCellClick(cellClickProps)}
             disabled={isAiTurn}
         >
