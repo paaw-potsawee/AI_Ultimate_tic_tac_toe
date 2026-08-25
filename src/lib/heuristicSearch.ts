@@ -44,11 +44,11 @@ const calculateScore = (state: GameState): number => {
         // หาก O ยึดกระดานใหญ่นี้ได้
         if ((state.wonO & (1 << i)) !== 0) {
             score += 100 * posWeights[i];
-        } 
+        }
         // หาก X ยึดกระดานใหญ่นี้ได้
         else if ((state.wonX & (1 << i)) !== 0) {
             score -= 100 * posWeights[i];
-        } 
+        }
         // หากกระดานยังไม่ถูกยึด ให้ประเมินเบี้ยในกระดานเล็ก
         else {
             const boardMultiplier = posWeights[i];
@@ -67,7 +67,7 @@ const calculateScore = (state: GameState): number => {
     if (state.nextBoard === 9) {
         if (state.player === 0) {
             // ตาต่อไปเป็นของ X แปลว่าตาที่แล้ว O เพิ่งเดินและทำให้ X ได้ Free Move
-            score -= 5000; 
+            score -= 5000;
         } else {
             // ตาต่อไปเป็นของ O แปลว่าตาที่แล้ว X เพิ่งเดินและทำให้ O ได้ Free Move
             score += 5000;
@@ -78,7 +78,13 @@ const calculateScore = (state: GameState): number => {
 };
 
 // 2. อัลกอริทึม Minimax พร้อม Alpha-Beta Pruning
-const minimax = (state: GameState, depth: number, alpha: number, beta: number, isMaximizing: boolean): number => {
+const minimax = (
+    state: GameState,
+    depth: number,
+    alpha: number,
+    beta: number,
+    isMaximizing: boolean,
+): number => {
     const winner = checkGameWinner(state); //[cite: 4]
     if (winner !== null || depth === 0) return calculateScore(state);
 
@@ -127,17 +133,18 @@ export const evaluateHeuristic = (state: GameState): number => {
     let alpha = -Infinity;
     let beta = Infinity;
     const depth = 4; // หากการคำนวณทำให้ตัวเกมหน่วงเกินไป สามารถลดความลึกลงเหลือ 3 ได้
-    
+
     const aiPlayer = state.player; // รับค่าผู้เล่นปัจจุบัน (0 = X, 1 = O)[cite: 4]
     // ถ้า AI เล่นเป็น O (1) ต้องการค่า Max แต่ถ้าเล่นเป็น X (0) ต้องการค่า Min
-    const isMaximizing = aiPlayer === 1; 
+    const isMaximizing = aiPlayer === 1;
     let bestValue = isMaximizing ? -Infinity : Infinity;
 
     // Move Ordering: ลำดับคิวตาเดินเพื่อเสริมประสิทธิภาพให้ Alpha-Beta Pruning
     const movesWithIndex = availableMoves.map((move, index) => {
         const cell = move % 9;
         let priority = 1;
-        if (cell === 4) priority = 3; // ช่องตรงกลางมีน้ำหนักสูงสุด
+        if (cell === 4)
+            priority = 3; // ช่องตรงกลางมีน้ำหนักสูงสุด
         else if ([0, 2, 6, 8].includes(cell)) priority = 2; // ตามด้วยช่องมุม
         return { move, index, priority };
     });
@@ -147,10 +154,10 @@ export const evaluateHeuristic = (state: GameState): number => {
     for (const item of movesWithIndex) {
         const boardIdx = Math.floor(item.move / 9);
         const cellIdx = item.move % 9;
-        
+
         // จำลองการเดินของ AI ในตานี้[cite: 4]
         const newState = applyMove(state, aiPlayer, boardIdx, cellIdx);
-        
+
         if (isMaximizing) {
             const boardValue = minimax(newState, depth - 1, alpha, beta, false);
             if (boardValue > bestValue) {
