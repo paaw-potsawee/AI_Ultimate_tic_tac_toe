@@ -5,24 +5,53 @@ import PlayerInfo from "./components/board/PlayerInfo";
 import GameControls from "./components/board/GameControls";
 import MoveHistory from "./components/board/MoveHistory";
 import Header from "./components/header/Header";
-import GameSetup from "./components/setup/GameSetup";
+import SelectMode from "./components/setup/SelectMode";
+import SelectSide from "./components/setup/SelectSide";
+import { useGameConfigStore } from "./store/boardStore";
+import { GameMode, type GameModeValue } from "./types/gameMode";
 
 function App() {
-    const [screen, setScreen] = useState<"setup" | "board">("setup");
+    const [screen, setScreen] = useState<
+        "select-mode" | "select-side" | "board"
+    >("select-mode");
+    const { mode, humanPlayer, startGame } = useGameConfigStore();
+    const [draftMode, setDraftMode] = useState<GameModeValue>(mode);
 
     return (
         <>
             <Header />
-            {screen === "setup" ? (
-                <GameSetup onStartGame={() => setScreen("board")} />
-            ) : (
+            {screen === "select-mode" && (
+                <SelectMode
+                    initialMode={draftMode}
+                    onNext={(selectedMode) => {
+                        setDraftMode(selectedMode);
+                        if (selectedMode === GameMode.PVP) {
+                            startGame(selectedMode, 0);
+                            setScreen("board");
+                        } else {
+                            setScreen("select-side");
+                        }
+                    }}
+                />
+            )}
+            {screen === "select-side" && (
+                <SelectSide
+                    initialPlayer={humanPlayer}
+                    onBack={() => setScreen("select-mode")}
+                    onStartGame={(side) => {
+                        startGame(draftMode, side);
+                        setScreen("board");
+                    }}
+                />
+            )}
+            {screen === "board" && (
                 <div className="flex flex-col items-center">
                     <GameStatus />
                     <UltimateBoard />
                     <PlayerInfo />
-                    <div className="flex gap-2 my-2">
+                    <div className="my-2 flex gap-2">
                         <GameControls
-                            onBackToSetup={() => setScreen("setup")}
+                            onBackToSetup={() => setScreen("select-mode")}
                         />
                     </div>
                     <MoveHistory />
