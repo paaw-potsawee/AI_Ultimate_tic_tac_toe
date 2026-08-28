@@ -14,11 +14,11 @@ function App() {
     const [screen, setScreen] = useState<
         "select-mode" | "select-side" | "board"
     >("select-mode");
-    const { mode, humanPlayer, startGame } = useGameConfigStore();
+    const { mode, startGame } = useGameConfigStore();
     const [draftMode, setDraftMode] = useState<GameModeValue>(mode);
 
     return (
-        <>
+        <div className="flex min-h-screen flex-col">
             <Header />
             {screen === "select-mode" && (
                 <SelectMode
@@ -36,8 +36,6 @@ function App() {
             )}
             {screen === "select-side" && (
                 <SelectSide
-                    initialPlayer={humanPlayer}
-                    onBack={() => setScreen("select-mode")}
                     onStartGame={(side) => {
                         startGame(draftMode, side);
                         setScreen("board");
@@ -45,7 +43,7 @@ function App() {
                 />
             )}
             {screen === "board" && (
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center pb-6">
                     <GameStatus />
                     <UltimateBoard />
                     <PlayerInfo />
@@ -57,7 +55,7 @@ function App() {
                     <MoveHistory />
                 </div>
             )}
-        </>
+        </div>
     );
 }
 
