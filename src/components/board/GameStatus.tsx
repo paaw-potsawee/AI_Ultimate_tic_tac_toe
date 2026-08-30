@@ -1,4 +1,4 @@
-import { useBoardStore } from "../../store/boardStore";
+import { useBoardStore } from "@/store/boardStore";
 
 const GameStatus = () => {
     const { winner, isAiTurn } = useBoardStore();

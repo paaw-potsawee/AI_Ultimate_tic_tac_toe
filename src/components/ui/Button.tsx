@@ -16,10 +16,7 @@ const Button = ({
         <button
             type={type}
             className={twMerge(
-                clsx(
-                    "border-2 rounded-2xl border-black px-4 py-2 font-bold",
-                    className,
-                ),
+                clsx("rounded-2xl border-2 border-black px-4 py-2", className),
             )}
             {...props}
         >

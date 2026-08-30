@@ -1,5 +1,5 @@
-import type { GameState } from "../types/game";
-import { getAvailableMoves } from "./game";
+import type { GameState } from "@/types/game";
+import { getAvailableMoves } from "@/lib/game";
 
 export const evaluateDFS = (state: GameState): number => {
     const availableMoves = getAvailableMoves(state);

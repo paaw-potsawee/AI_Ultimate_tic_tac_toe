@@ -1,5 +1,5 @@
-import { useBoardStore } from "../../store/boardStore";
-import { type CellPosition } from "../../types/board";
+import { useBoardStore } from "@/store/boardStore";
+import { type CellPosition } from "@/types/board";
 
 interface CellProps {
     cellClickProps: CellPosition;
@@ -10,7 +10,7 @@ const Cell = ({ cellClickProps }: CellProps) => {
     const { localRow, localCol, cellRow, cellCol } = cellClickProps;
     return (
         <button
-            className={`flex items-center justify-center w-[10vw] max-w-20 aspect-square border border-slate-600 ${isAiTurn ? "opacity-70 cursor-not-allowed" : "hover:bg-slate-700"}`}
+            className={`flex aspect-square w-[10vw] max-w-20 items-center justify-center border border-slate-600 ${isAiTurn ? "cursor-not-allowed opacity-70" : "hover:bg-slate-700"}`}
             onClick={() => handleCellClick(cellClickProps)}
             disabled={isAiTurn}
         >

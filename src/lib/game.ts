@@ -1,5 +1,5 @@
-import type { CellPosition, RenderBoard } from "../types/board";
-import type { GameState, Move, Player } from "../types/game";
+import type { CellPosition, RenderBoard } from "@/types/board";
+import type { GameState, Move, Player } from "@/types/game";
 
 export const getUltimateBoard = (): GameState => {
     return {

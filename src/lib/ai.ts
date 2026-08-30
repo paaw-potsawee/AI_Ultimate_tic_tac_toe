@@ -1,9 +1,9 @@
-import type { GameModeValue } from "../types/gameMode";
-import type { GameState, Move } from "../types/game";
-import { getAvailableMoves } from "./game";
-import { evaluateHeuristic } from "./heuristicSearch";
-import { GameMode } from "../types/gameMode";
-import { evaluateDFS, evaluateBFS } from "./blindSearch";
+import type { GameModeValue } from "@/types/gameMode";
+import type { GameState, Move } from "@/types/game";
+import { getAvailableMoves } from "@/lib/game";
+import { evaluateHeuristic } from "@/lib/heuristicSearch";
+import { GameMode } from "@/types/gameMode";
+import { evaluateDFS, evaluateBFS } from "@/lib/blindSearch";
 
 export const getAiMove = (state: GameState, option: GameModeValue): Move => {
     const availableMoves = getAvailableMoves(state);

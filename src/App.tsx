@@ -1,14 +1,13 @@
 import { useState } from "react";
-import UltimateBoard from "./components/board/UltimateBoard";
-import GameStatus from "./components/board/GameStatus";
-import PlayerInfo from "./components/board/PlayerInfo";
-import GameControls from "./components/board/GameControls";
-import MoveHistory from "./components/board/MoveHistory";
-import Header from "./components/header/Header";
-import SelectMode from "./components/setup/SelectMode";
-import SelectSide from "./components/setup/SelectSide";
-import { useGameConfigStore } from "./store/boardStore";
-import { GameMode, type GameModeValue } from "./types/gameMode";
+import UltimateBoard from "@/components/board/UltimateBoard";
+import PlayerInfo from "@/components/board/PlayerInfo";
+import GameControls from "@/components/board/GameControls";
+import MoveHistory from "@/components/board/MoveHistory";
+import Header from "@/components/header/Header";
+import SelectMode from "@/components/setup/SelectMode";
+import SelectSide from "@/components/setup/SelectSide";
+import { useGameConfigStore } from "@/store/boardStore";
+import { GameMode, type GameModeValue } from "@/types/gameMode";
 
 function App() {
     const [screen, setScreen] = useState<
@@ -18,7 +17,7 @@ function App() {
     const [draftMode, setDraftMode] = useState<GameModeValue>(mode);
 
     return (
-        <div className="flex min-h-screen flex-col">
+        <div className="flex min-h-screen flex-col items-center">
             <Header />
             {screen === "select-mode" && (
                 <SelectMode
@@ -43,16 +42,16 @@ function App() {
                 />
             )}
             {screen === "board" && (
-                <div className="flex flex-col items-center pb-6">
-                    <GameStatus />
+                <div className="flex flex-col pb-4 lg:flex-row">
+                    {/* <GameStatus /> */}
                     <UltimateBoard />
-                    <PlayerInfo />
-                    <div className="my-2 flex gap-2">
+                    <div className="flex flex-col gap-2 p-2">
+                        <PlayerInfo />
                         <GameControls
                             onBackToSetup={() => setScreen("select-mode")}
                         />
+                        <MoveHistory />
                     </div>
-                    <MoveHistory />
                 </div>
             )}
         </div>

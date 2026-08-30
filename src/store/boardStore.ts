@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
-import type { CellPosition } from "../types/board";
-import type { Move, Player } from "../types/game";
+import type { CellPosition } from "@/types/board";
+import type { Move, Player } from "@/types/game";
 import {
     applyMove,
     checkGameWinner,
@@ -9,9 +9,9 @@ import {
     isAvailableCell,
     toRenderBoard,
     back,
-} from "../lib/game";
-import { GameMode, type GameModeValue } from "../types/gameMode";
-import { getAiMove } from "../lib/ai";
+} from "@/lib/game";
+import { GameMode, type GameModeValue } from "@/types/gameMode";
+import { getAiMove } from "@/lib/ai";
 
 let state = getUltimateBoard();
 let currentPlayer: Player = 0;

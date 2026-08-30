@@ -1,5 +1,5 @@
-import Cell from "./Cell";
-import { useBoardStore } from "../../store/boardStore";
+import Cell from "@/components/board/Cell";
+import { useBoardStore } from "@/store/boardStore";
 
 interface Props {
     localRow: number;
@@ -12,7 +12,7 @@ const LocalBoard = ({ localRow, localCol }: Props) => {
     return (
         <>
             {board[localRow][localCol].winner ? (
-                <div className="grid place-items-center text-4xl border-2 border-amber-100">
+                <div className="grid place-items-center border-2 border-amber-100 text-4xl">
                     {board[localRow][localCol].winner}
                 </div>
             ) : (

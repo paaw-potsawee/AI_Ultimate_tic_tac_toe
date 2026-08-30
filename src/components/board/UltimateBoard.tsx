@@ -1,11 +1,11 @@
-import LocalBoard from "./LocalBoard";
-import { useBoardStore } from "../../store/boardStore";
+import LocalBoard from "@/components/board/LocalBoard";
+import { useBoardStore } from "@/store/boardStore";
 
 const UltimateBoard = () => {
     const { board } = useBoardStore();
 
     return (
-        <div className="grid grid-rows-3 p-4 max-w-5xl">
+        <div className="grid max-w-5xl grid-rows-3 p-4">
             {board.map((rowBoards, row) => {
                 return (
                     <div className={`grid grid-cols-3`} key={row}>

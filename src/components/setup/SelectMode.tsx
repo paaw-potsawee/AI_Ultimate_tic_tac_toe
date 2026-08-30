@@ -3,7 +3,7 @@ import {
     gameModeOptions,
     parseGameMode,
     type GameModeValue,
-} from "../../types/gameMode";
+} from "@/types/gameMode";
 
 interface Props {
     initialMode: GameModeValue;

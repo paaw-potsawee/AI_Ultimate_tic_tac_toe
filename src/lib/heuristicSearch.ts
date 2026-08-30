@@ -1,5 +1,5 @@
-import type { GameState } from "../types/game";
-import { getAvailableMoves, applyMove, checkGameWinner } from "./game";
+import type { GameState } from "@/types/game";
+import { getAvailableMoves, applyMove, checkGameWinner } from "@/lib/game";
 
 // ============================================================================
 // AI Core Logic (Heuristic & Minimax) สำหรับระบบ Bitboard

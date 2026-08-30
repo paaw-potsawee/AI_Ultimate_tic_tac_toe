@@ -1,4 +1,5 @@
-import { useBoardStore, useGameConfigStore } from "../../store/boardStore";
+import { useBoardStore, useGameConfigStore } from "@/store/boardStore";
+import Button from "@/components/ui/Button";
 
 interface Props {
     onBackToSetup: () => void;
@@ -14,23 +15,26 @@ const GameControls = ({ onBackToSetup }: Props) => {
     };
 
     return (
-        <>
-            <button className="border p-2 hover:bg-slate-500" onClick={back}>
-                back
-            </button>
-            <button
-                className="border p-2 hover:bg-slate-500"
+        <div className="flex justify-between gap-2">
+            <Button
+                className="border-0 bg-ocean-200 px-4 py-2 text-teal"
+                onClick={back}
+            >
+                Undo
+            </Button>
+            <Button
+                className="border-0 bg-ocean-200 px-4 py-2 text-black"
+                onClick={handleBackToSetup}
+            >
+                MainMenu
+            </Button>
+            <Button
+                className="border-0 bg-ocean-200 px-4 py-2 text-sunset-900"
                 onClick={clearBoard}
             >
                 Reset
-            </button>
-            <button
-                className="border p-2 hover:bg-slate-500"
-                onClick={handleBackToSetup}
-            >
-                Back to setup
-            </button>
-        </>
+            </Button>
+        </div>
     );
 };
 
