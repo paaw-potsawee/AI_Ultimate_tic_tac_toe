@@ -5,6 +5,7 @@ import {
     applyMove,
     checkGameWinner,
     getAvailableLocalBoards,
+    getGameWinningLine,
     getUltimateBoard,
     isAvailableCell,
     toRenderBoard,
@@ -23,6 +24,7 @@ let availableLocalBoards: CellPosition[] = getAvailableLocalBoards(
 );
 let option: GameModeValue = 1;
 let boardSnapshot = toRenderBoard(state);
+let gameWinningLineSnapshot = getGameWinningLine(state);
 let humanPlayer: Player = 0;
 let isAiTurn = false;
 let aiTimer: ReturnType<typeof setTimeout> | null = null;
@@ -37,6 +39,7 @@ const emit = () => {
 const refreshAvailableBoards = () => {
     availableLocalBoards = getAvailableLocalBoards(state, history);
     boardSnapshot = toRenderBoard(state);
+    gameWinningLineSnapshot = getGameWinningLine(state);
 };
 
 const doAiMove = () => {
@@ -89,6 +92,9 @@ const BoardStore = {
     },
     getIsAiTurn() {
         return isAiTurn;
+    },
+    getGameWinningLine() {
+        return gameWinningLineSnapshot;
     },
     subscribeOption(cb: () => void) {
         optionListeners.add(cb);
@@ -218,6 +224,10 @@ export const useBoardStore = () => {
         BoardStore.subscribe,
         BoardStore.getIsAiTurn,
     );
+    const gameWinningLine = useSyncExternalStore(
+        BoardStore.subscribe,
+        BoardStore.getGameWinningLine,
+    );
 
     return {
         board,
@@ -226,6 +236,7 @@ export const useBoardStore = () => {
         back: BoardStore.back,
         currentPlayer: currentPlayer === 0 ? "X" : "O",
         winner,
+        gameWinningLine,
         history,
         availableLocalBoards,
         isAiTurn,

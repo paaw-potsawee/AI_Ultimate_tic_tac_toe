@@ -1,5 +1,6 @@
 import type { CellPosition, RenderBoard } from "@/types/board";
 import type { GameState, Move, Player } from "@/types/game";
+import type { GameWinLine, WinLineType } from "@/types/winLine";
 
 export const getUltimateBoard = (): GameState => {
     return {
@@ -12,10 +13,21 @@ export const getUltimateBoard = (): GameState => {
     };
 };
 
-const WIN_MASKS = [
-    0b000000111, 0b000111000, 0b111000000, 0b001001001, 0b010010010,
-    0b100100100, 0b100010001, 0b001010100,
+const WIN_LINES: { mask: number; type: WinLineType }[] = [
+    { mask: 0b000000111, type: "row-0" },
+    { mask: 0b000111000, type: "row-1" },
+    { mask: 0b111000000, type: "row-2" },
+    { mask: 0b001001001, type: "col-0" },
+    { mask: 0b010010010, type: "col-1" },
+    { mask: 0b100100100, type: "col-2" },
+    { mask: 0b100010001, type: "diag-main" },
+    { mask: 0b001010100, type: "diag-anti" },
 ];
+
+export const getWinningLine = (boardMask: number): WinLineType | null => {
+    const match = WIN_LINES.find(({ mask }) => (boardMask & mask) === mask);
+    return match ? match.type : null;
+};
 
 const isBoardFull = (boardMask: number): boolean => {
     return boardMask === 0b111111111;
@@ -79,7 +91,7 @@ export const cloneUltimateBoard = (state: GameState): GameState => {
 };
 
 export const checkWinner = (board: number): boolean => {
-    return WIN_MASKS.some((mask) => (board & mask) === mask);
+    return WIN_LINES.some(({ mask }) => (board & mask) === mask);
 };
 
 export const checkGameWinner = (state: GameState): Player | null => {
@@ -88,11 +100,20 @@ export const checkGameWinner = (state: GameState): Player | null => {
     return null;
 };
 
+export const getGameWinningLine = (state: GameState): GameWinLine | null => {
+    const xLine = getWinningLine(state.wonX);
+    if (xLine) return { winner: 0, line: xLine };
+    const oLine = getWinningLine(state.wonO);
+    if (oLine) return { winner: 1, line: oLine };
+    return null;
+};
+
 export const toRenderBoard = (state: GameState): RenderBoard => {
     const renderBoard: RenderBoard = Array.from({ length: 3 }, () =>
         Array.from({ length: 3 }, () => ({
             board: Array.from({ length: 3 }, () => Array(3).fill(null)),
             winner: null,
+            winningLine: null,
         })),
     );
 
@@ -117,8 +138,14 @@ export const toRenderBoard = (state: GameState): RenderBoard => {
 
         if ((state.wonX & (1 << localBoard)) !== 0) {
             renderBoard[localRow][localCol].winner = "X";
+            renderBoard[localRow][localCol].winningLine = getWinningLine(
+                state.x[localBoard],
+            );
         } else if ((state.wonO & (1 << localBoard)) !== 0) {
             renderBoard[localRow][localCol].winner = "O";
+            renderBoard[localRow][localCol].winningLine = getWinningLine(
+                state.o[localBoard],
+            );
         }
     }
 
