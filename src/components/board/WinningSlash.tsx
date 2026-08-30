@@ -33,7 +33,7 @@ const WinningSlash = ({
     return (
         <svg
             className={cn(
-                "pointer-events-none absolute inset-0 z-20 h-full w-full",
+                "pointer-events-none absolute inset-0 z-10 h-full w-full",
                 className,
             )}
             xmlns="http://www.w3.org/2000/svg"

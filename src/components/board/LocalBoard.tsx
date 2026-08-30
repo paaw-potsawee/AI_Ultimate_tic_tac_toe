@@ -40,7 +40,7 @@ const LocalBoard = ({ localRow, localCol }: Props) => {
                 )}
 
                 {localData.winner && (
-                    <div className="pointer-events-none absolute inset-0 z-10">
+                    <div className="pointer-events-none absolute inset-0 z-20">
                         {localData.winner === "X" ? (
                             <X className="h-full w-full" />
                         ) : (
