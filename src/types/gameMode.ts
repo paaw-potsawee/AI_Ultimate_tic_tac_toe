@@ -3,6 +3,7 @@ export const GameMode = {
     HEURISTIC_AI: 1,
     BLIND_DFS_AI: 2,
     BLIND_BFS_AI: 3,
+    AIVAI: 4,
 } as const;
 
 export type GameModeValue = (typeof GameMode)[keyof typeof GameMode];
@@ -10,19 +11,23 @@ export type GameModeValue = (typeof GameMode)[keyof typeof GameMode];
 export const gameModeOptions = [
     {
         value: GameMode.PVP,
-        label: "Player vs Player",
+        label: "Player",
     },
     {
         value: GameMode.HEURISTIC_AI,
-        label: "Player vs AI (Heuristic Search)",
+        label: "The Heuristic",
     },
     {
         value: GameMode.BLIND_DFS_AI,
-        label: "Player vs AI (Blind DFS)",
+        label: "The Blind (DFS)",
     },
     {
         value: GameMode.BLIND_BFS_AI,
-        label: "Player vs AI (Blind BFS)",
+        label: "The Blind (BFS)",
+    },
+    {
+        value: GameMode.AIVAI,
+        label: "AI vs AI",
     },
 ] satisfies readonly {
     value: GameModeValue;
@@ -36,7 +41,8 @@ export const parseGameMode = (value: string): GameModeValue => {
         mode === GameMode.PVP ||
         mode === GameMode.HEURISTIC_AI ||
         mode === GameMode.BLIND_DFS_AI ||
-        mode === GameMode.BLIND_BFS_AI
+        mode === GameMode.BLIND_BFS_AI ||
+        mode === GameMode.AIVAI
     ) {
         return mode;
     }

@@ -13,18 +13,20 @@ function App() {
     const [screen, setScreen] = useState<
         "select-mode" | "select-side" | "board"
     >("select-mode");
-    const { mode, startGame } = useGameConfigStore();
-    const [draftMode, setDraftMode] = useState<GameModeValue>(mode);
+    const { startGame } = useGameConfigStore();
+    const [draftMode, setDraftMode] = useState<GameModeValue>(GameMode.PVP);
 
     return (
-        <div className="flex min-h-screen flex-col items-center gap-10">
+        <div className="flex min-h-screen flex-col items-center">
             <Header />
             {screen === "select-mode" && (
                 <SelectMode
-                    initialMode={draftMode}
                     onNext={(selectedMode) => {
                         setDraftMode(selectedMode);
-                        if (selectedMode === GameMode.PVP) {
+                        if (
+                            selectedMode === GameMode.PVP ||
+                            selectedMode === GameMode.AIVAI
+                        ) {
                             startGame(selectedMode, 0);
                             setScreen("board");
                         } else {

@@ -18,15 +18,20 @@
     --color-teal: #24a7a1;
     --color-peach: #fd975c;
     --color-black: #000000;
+
+    --font-sans:
+        "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, sans-serif;
 }
 
 @layer base {
     html {
-        @apply bg-teal;
+        @apply bg-teal font-sans;
     }
 
     body {
-        @apply min-h-screen antialiased;
+        @apply min-h-screen font-sans antialiased;
+        font-family: var(--font-sans);
     }
 
     h1 {
