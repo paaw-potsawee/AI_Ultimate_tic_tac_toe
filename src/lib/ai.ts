@@ -3,14 +3,15 @@ import type { GameState, Move } from "@/types/game";
 import { getAvailableMoves } from "@/lib/game";
 import { evaluateHeuristic } from "@/lib/heuristicSearch";
 import { GameMode } from "@/types/gameMode";
-import { evaluateDFS, evaluateBFS } from "@/lib/blindSearch";
+import { evaluateBFS } from "@/lib/bfs";
+import { evaluateDFS } from "@/lib/dfs";
 
 export const getAiMove = (state: GameState, option: GameModeValue): Move => {
     const availableMoves = getAvailableMoves(state);
-    let index: number;
+    let index: number | null;
     switch (option) {
         case GameMode.BLIND_DFS_AI:
-            index = evaluateDFS(state);
+            index = evaluateDFS(state, 5);
             break;
         case GameMode.BLIND_BFS_AI:
             index = evaluateBFS(state);
@@ -22,6 +23,9 @@ export const getAiMove = (state: GameState, option: GameModeValue): Move => {
             throw new Error("Invalid option");
     }
 
+    if (index === null) {
+        throw new Error("No available moves");
+    }
     const encoded = availableMoves[index];
     return {
         player: state.player,

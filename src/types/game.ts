@@ -1,6 +1,8 @@
 // 0 = X, 1 = O
 export type Player = 0 | 1;
 
+export type GameResult = 0 | 1 | -1 | null; // 0 = X wins, 1 = O wins, -1 = draw, null = ongoing
+
 export interface Move {
     player: Player;
     localRow: number;

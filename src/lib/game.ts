@@ -1,5 +1,5 @@
 import type { CellPosition, RenderBoard } from "@/types/board";
-import type { GameState, Move, Player } from "@/types/game";
+import type { GameState, Move, Player, GameResult } from "@/types/game";
 import type { GameWinLine, WinLineType } from "@/types/winLine";
 
 export const getUltimateBoard = (): GameState => {
@@ -94,9 +94,10 @@ export const checkWinner = (board: number): boolean => {
     return WIN_LINES.some(({ mask }) => (board & mask) === mask);
 };
 
-export const checkGameWinner = (state: GameState): Player | null => {
+export const checkGameWinner = (state: GameState): GameResult => {
     if (checkWinner(state.wonX)) return 0;
     if (checkWinner(state.wonO)) return 1;
+    if (isBoardFull(state.wonX | state.wonO)) return -1;
     return null;
 };
 
