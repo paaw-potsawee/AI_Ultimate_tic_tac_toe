@@ -51,5 +51,5 @@ export const evaluateDFS = (state: GameState, depth: number): number | null => {
         }
     }
     // fallback to first move if all moves lead to a loss
-    return availableMoves.length > 0 ? 0 : null;
+    return availableMoves[0];
 };

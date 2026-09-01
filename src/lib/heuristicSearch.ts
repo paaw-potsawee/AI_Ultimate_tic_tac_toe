@@ -152,5 +152,5 @@ export const evaluateHeuristic = (state: GameState): number => {
         if (beta <= alpha) break; // Pruning ระดับชั้นบนสุด
     }
 
-    return bestIndex;
+    return availableMoves[bestIndex];
 };
