@@ -1,5 +1,6 @@
 import { useState } from "react";
 import UltimateBoard from "@/components/board/UltimateBoard";
+import GameStatus from "@/components/board/GameStatus";
 import PlayerInfo from "@/components/board/PlayerInfo";
 import GameControls from "@/components/board/GameControls";
 import MoveHistory from "@/components/board/MoveHistory";
@@ -44,10 +45,10 @@ function App() {
                 />
             )}
             {screen === "board" && (
-                <div className="flex flex-col pb-4 lg:flex-row">
-                    {/* <GameStatus /> */}
+                <div className="flex flex-col items-center gap-4 py-4 lg:flex-row lg:items-start lg:justify-center">
                     <UltimateBoard />
-                    <div className="flex flex-col gap-2 p-2">
+                    <div className="flex w-full max-w-163 flex-col gap-2 p-2 lg:h-163 lg:w-80 lg:max-w-none">
+                        <GameStatus />
                         <PlayerInfo />
                         <GameControls
                             onBackToSetup={() => setScreen("select-mode")}

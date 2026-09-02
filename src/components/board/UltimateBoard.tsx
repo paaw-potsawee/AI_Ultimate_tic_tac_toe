@@ -6,7 +6,7 @@ const UltimateBoard = () => {
     const { board, gameWinningLine } = useBoardStore();
 
     return (
-        <div className="relative border-4 border-black bg-orange p-1 sm:p-2">
+        <div className="relative shrink-0 self-start border-4 border-black bg-orange p-1 sm:p-2">
             <svg
                 className="pointer-events-none absolute inset-0 h-full w-full"
                 viewBox="0 0 100 100"
