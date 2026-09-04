@@ -12,7 +12,7 @@ import {
     back,
 } from "@/lib/game";
 import { GameMode, type GameModeValue } from "@/types/gameMode";
-import { getAiMove } from "@/lib/ai";
+import type { WorkerRequest, WorkerResponse } from "@/types/aiWorker";
 
 let state = getUltimateBoard();
 let currentPlayer: Player = 0;
@@ -28,6 +28,11 @@ let gameWinningLineSnapshot = getGameWinningLine(state);
 let humanPlayer: Player = 0;
 let isAiTurn = false;
 
+let aiWorker: Worker | null = null;
+let aiEpoch = 0;
+let aiDelayTimeout: ReturnType<typeof setTimeout> | null = null;
+const AIVAI_DELAY_MS = 500;
+
 const listeners: Set<() => void> = new Set();
 const optionListeners: Set<() => void> = new Set();
 
@@ -41,28 +46,44 @@ const refreshAvailableBoards = () => {
     gameWinningLineSnapshot = getGameWinningLine(state);
 };
 
-const doAiMove = () => {
-    if (winner !== null || option === GameMode.PVP) return;
+const getWorker = () => {
+    if (!aiWorker) {
+        aiWorker = new Worker(
+            new URL("../workers/aiWorker.ts", import.meta.url),
+            { type: "module" },
+        );
+        aiWorker.onmessage = handleWorkerMessage;
+        aiWorker.onerror = (err) => {
+            console.error("AI worker error:", err);
+            isAiTurn = false;
+            emit();
+        };
+    }
+    return aiWorker;
+};
 
-    isAiTurn = true;
-    emit();
-    if (!isAiTurn) return;
+const handleWorkerMessage = (event: MessageEvent<WorkerResponse>) => {
+    const { board, cell, epoch, durationMs } = event.data;
 
-    const performanceStart = performance.now();
-    const move = getAiMove(state, option);
-    const performanceEnd = performance.now();
-    const nextState = applyMove(state, currentPlayer, move.board, move.cell);
+    // Discard stale moves if user undid, reset, or left the game
+    if (epoch !== aiEpoch) {
+        return;
+    }
+
+    console.log(`AI move took ${durationMs.toFixed(1)} milliseconds`);
+
+    const nextState = applyMove(state, currentPlayer, board, cell);
 
     history = [
         ...history,
         {
             player: currentPlayer,
-            localRow: Math.floor(move.board / 3),
-            localCol: move.board % 3,
-            cellRow: Math.floor(move.cell / 3),
-            cellCol: move.cell % 3,
-            board: move.board,
-            cell: move.cell,
+            localRow: Math.floor(board / 3),
+            localCol: board % 3,
+            cellRow: Math.floor(cell / 3),
+            cellCol: cell % 3,
+            board,
+            cell,
         },
     ];
 
@@ -72,9 +93,38 @@ const doAiMove = () => {
     isAiTurn = false;
     refreshAvailableBoards();
     emit();
-    console.log(
-        `AI move took ${performanceEnd - performanceStart} milliseconds`,
-    );
+
+    // Trigger next AI move if necessary (e.g. AI vs AI, or player vs AI)
+    if (
+        option !== GameMode.PVP &&
+        winner === null &&
+        (option === GameMode.AIVAI || currentPlayer !== humanPlayer)
+    ) {
+        if (option === GameMode.AIVAI) {
+            aiDelayTimeout = setTimeout(() => {
+                if (epoch === aiEpoch) {
+                    doAiMove();
+                }
+            }, AIVAI_DELAY_MS);
+        } else {
+            doAiMove();
+        }
+    }
+};
+
+const doAiMove = () => {
+    if (winner !== null || option === GameMode.PVP) return;
+
+    isAiTurn = true;
+    emit();
+
+    const request: WorkerRequest = {
+        state,
+        option,
+        epoch: aiEpoch,
+    };
+
+    getWorker().postMessage(request);
 };
 
 const BoardStore = {
@@ -118,6 +168,11 @@ const BoardStore = {
         BoardStore.clearBoard();
     },
     leaveGame() {
+        aiEpoch++;
+        if (aiDelayTimeout) {
+            clearTimeout(aiDelayTimeout);
+            aiDelayTimeout = null;
+        }
         isAiTurn = false;
     },
     clearBoard() {
@@ -129,12 +184,24 @@ const BoardStore = {
         isAiTurn = false;
         refreshAvailableBoards();
         emit();
-        if (option !== GameMode.PVP && currentPlayer !== humanPlayer) {
-            doAiMove();
+        if (
+            option === GameMode.AIVAI ||
+            (option !== GameMode.PVP && currentPlayer !== humanPlayer)
+        ) {
+            if (option === GameMode.AIVAI) {
+                const currentEpoch = aiEpoch;
+                aiDelayTimeout = setTimeout(() => {
+                    if (currentEpoch === aiEpoch) {
+                        doAiMove();
+                    }
+                }, AIVAI_DELAY_MS);
+            } else {
+                doAiMove();
+            }
         }
     },
     handleCellClick({ localRow, localCol, cellRow, cellCol }: CellPosition) {
-        if (winner !== null || isAiTurn) {
+        if (winner !== null || isAiTurn || option === GameMode.AIVAI) {
             return;
         }
         if (
@@ -185,9 +252,35 @@ const BoardStore = {
         }
     },
     back() {
-        if (history.length === 0 || isAiTurn) {
+        if (history.length === 0) {
             return;
         }
+
+        // If AI is currently calculating, cancel it and undo human's last move
+        if (isAiTurn) {
+            aiEpoch++;
+            if (aiDelayTimeout) {
+                clearTimeout(aiDelayTimeout);
+                aiDelayTimeout = null;
+            }
+            isAiTurn = false;
+
+            const result = back(state, history);
+            state = result.state;
+            history = result.history;
+            currentPlayer = state.player;
+            winner = checkGameWinner(state);
+            refreshAvailableBoards();
+            emit();
+            return;
+        }
+
+        if (aiDelayTimeout) {
+            aiEpoch++;
+            clearTimeout(aiDelayTimeout);
+            aiDelayTimeout = null;
+        }
+
         let result = back(state, history);
         state = result.state;
         history = result.history;

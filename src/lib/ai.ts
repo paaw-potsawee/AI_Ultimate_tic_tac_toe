@@ -15,6 +15,7 @@ export const getAiMove = (state: GameState, option: GameModeValue): Move => {
             encoded = evaluateBFS(state, 5);
             break;
         case GameMode.HEURISTIC_AI:
+        case GameMode.AIVAI:
             encoded = evaluateHeuristic(state);
             break;
         default:

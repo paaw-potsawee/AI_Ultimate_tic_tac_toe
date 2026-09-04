@@ -107,7 +107,7 @@ export const evaluateHeuristic = (state: GameState): number => {
     let bestIndex = 0;
     let alpha = -Infinity;
     let beta = Infinity;
-    const depth = 4; // หากการคำนวณทำให้ตัวเกมหน่วงเกินไป สามารถลดความลึกลงเหลือ 3 ได้
+    const depth = 10; // หากการคำนวณทำให้ตัวเกมหน่วงเกินไป สามารถลดความลึกลงเหลือ 3 ได้
 
     const aiPlayer = state.player; // รับค่าผู้เล่นปัจจุบัน (0 = X, 1 = O)[cite: 4]
     // ถ้า AI เล่นเป็น O (1) ต้องการค่า Max แต่ถ้าเล่นเป็น X (0) ต้องการค่า Min
