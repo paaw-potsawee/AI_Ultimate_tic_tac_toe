@@ -7,7 +7,7 @@
         "dev": "vite",
         "build": "tsc -b && vite build",
         "lint": "oxlint",
-        "test": "tsc -p tsconfig.test.json && vitest run --pool=threads --maxWorkers=1",
+        "test": "tsc -p tsconfig.test.json && vitest run --pool=forks --maxWorkers=1",
         "format": "prettier . --write",
         "preview": "vite preview"
     },
