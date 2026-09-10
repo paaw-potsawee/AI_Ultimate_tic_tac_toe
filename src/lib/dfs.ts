@@ -1,5 +1,6 @@
 import type { GameState } from "@/types/game";
 import { getAvailableMoves, checkGameWinner, applyMove } from "@/lib/game";
+import { BOARD_CELL_COUNT } from "@/lib/gameRules";
 
 let nodesExplored = 0;
 
@@ -16,8 +17,8 @@ const dfs = (state: GameState, depth: number = 5): number => {
             applyMove(
                 state,
                 state.player,
-                Math.floor(availableMoves[i] / 9),
-                availableMoves[i] % 9,
+                Math.floor(availableMoves[i] / BOARD_CELL_COUNT),
+                availableMoves[i] % BOARD_CELL_COUNT,
             ),
             depth - 1,
         );
@@ -33,8 +34,8 @@ export const evaluateDFS = (state: GameState, depth: number): number | null => {
         return null;
     }
     for (let i = 0; i < availableMoves.length; i++) {
-        const boardIdx = Math.floor(availableMoves[i] / 9);
-        const cellIdx = availableMoves[i] % 9;
+        const boardIdx = Math.floor(availableMoves[i] / BOARD_CELL_COUNT);
+        const cellIdx = availableMoves[i] % BOARD_CELL_COUNT;
 
         console.log(`Exploring move: Board ${boardIdx}, Cell ${cellIdx}`);
         const newState = applyMove(state, state.player, boardIdx, cellIdx);

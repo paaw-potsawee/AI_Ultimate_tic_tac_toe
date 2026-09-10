@@ -1,17 +1,19 @@
 import type { GameResult, GameState } from "@/types/game";
 import { applyMove, checkGameWinner, getAvailableMoves } from "@/lib/game";
+import {
+    BOARD_CELL_COUNT,
+    FREE_CHOICE_BOARD,
+    FULL_BOARD_MASK,
+    isLocalBoardFull,
+    WIN_MASKS,
+} from "@/lib/gameRules";
 
 const WIN_SCORE = 1_000_000;
 const MAX_DEPTH = 10;
 const TIME_BUDGET_MS = 900;
 const TRANSPOSITION_TABLE_LIMIT = 100_000;
-const FULL_BOARD_MASK = 0b111111111;
 
 const POSITION_WEIGHTS = [3, 2, 3, 2, 4, 2, 3, 2, 3] as const;
-const WIN_MASKS = [
-    0b000000111, 0b000111000, 0b111000000, 0b001001001, 0b010010010,
-    0b100100100, 0b100010001, 0b001010100,
-] as const;
 
 const CAPTURED_BOARD_SCORE = 2_000;
 const MACRO_ONE_IN_LINE_SCORE = 1_000;
@@ -60,32 +62,6 @@ const countBits = (value: number): number => {
     return count;
 };
 
-const isLocalBoardFull = (state: GameState, boardIndex: number): boolean =>
-    (state.x[boardIndex] | state.o[boardIndex]) === FULL_BOARD_MASK;
-
-const isLocalBoardWon = (state: GameState, boardIndex: number): boolean =>
-    ((state.wonX | state.wonO) & (1 << boardIndex)) !== 0;
-
-const hasAvailableMove = (state: GameState): boolean => {
-    if (state.nextBoard !== 9) {
-        return (
-            !isLocalBoardWon(state, state.nextBoard) &&
-            !isLocalBoardFull(state, state.nextBoard)
-        );
-    }
-
-    for (let boardIndex = 0; boardIndex < 9; boardIndex += 1) {
-        if (
-            !isLocalBoardWon(state, boardIndex) &&
-            !isLocalBoardFull(state, boardIndex)
-        ) {
-            return true;
-        }
-    }
-
-    return false;
-};
-
 const getTerminalScore = (
     winner: GameResult,
     remainingDepth: number,
@@ -127,7 +103,7 @@ const calculateLocalBoardScore = (
         );
     }
 
-    for (let cellIndex = 0; cellIndex < 9; cellIndex += 1) {
+    for (let cellIndex = 0; cellIndex < BOARD_CELL_COUNT; cellIndex += 1) {
         const cellBit = 1 << cellIndex;
         const positionScore = POSITION_SCORE * POSITION_WEIGHTS[cellIndex];
 
@@ -143,7 +119,7 @@ const calculateScore = (state: GameState): number => {
     let score = 0;
     let drawnBoards = 0;
 
-    for (let boardIndex = 0; boardIndex < 9; boardIndex += 1) {
+    for (let boardIndex = 0; boardIndex < BOARD_CELL_COUNT; boardIndex += 1) {
         const boardBit = 1 << boardIndex;
         const boardWeight = POSITION_WEIGHTS[boardIndex];
 
@@ -170,7 +146,7 @@ const calculateScore = (state: GameState): number => {
         );
     }
 
-    if (state.nextBoard === 9) {
+    if (state.nextBoard === FREE_CHOICE_BOARD) {
         score += state.player === 1 ? FREE_MOVE_SCORE : -FREE_MOVE_SCORE;
     }
 
@@ -199,8 +175,8 @@ const getMovePriority = (
     preferredMove: number | null,
 ): number => {
     const player = previousState.player;
-    const boardIndex = Math.floor(move / 9);
-    const cellIndex = move % 9;
+    const boardIndex = Math.floor(move / BOARD_CELL_COUNT);
+    const cellIndex = move % BOARD_CELL_COUNT;
     const previousWonBoards =
         player === 1 ? previousState.wonO : previousState.wonX;
     const nextWonBoards = player === 1 ? nextState.wonO : nextState.wonX;
@@ -215,7 +191,7 @@ const getMovePriority = (
     }
 
     // Sending the opponent to a free-choice turn is usually undesirable.
-    if (nextState.nextBoard === 9) priority -= 10_000;
+    if (nextState.nextBoard === FREE_CHOICE_BOARD) priority -= 10_000;
 
     return priority;
 };
@@ -226,8 +202,8 @@ const getOrderedMoves = (
     preferredMove: number | null = null,
 ): OrderedMove[] => {
     const orderedMoves = legalMoves.map((move) => {
-        const boardIndex = Math.floor(move / 9);
-        const cellIndex = move % 9;
+        const boardIndex = Math.floor(move / BOARD_CELL_COUNT);
+        const cellIndex = move % BOARD_CELL_COUNT;
         const nextState = applyMove(state, state.player, boardIndex, cellIndex);
 
         return {
@@ -265,7 +241,6 @@ const minimax = (
 
     const terminalScore = getTerminalScore(checkGameWinner(state), depth);
     if (terminalScore !== null) return terminalScore;
-    if (!hasAvailableMove(state)) return 0;
     if (depth === 0) return calculateScore(state);
 
     const key = getStateKey(state, depth);
@@ -282,6 +257,8 @@ const minimax = (
     }
 
     const legalMoves = getAvailableMoves(state);
+    if (legalMoves.length === 0) return 0;
+
     const orderedMoves = getOrderedMoves(
         state,
         legalMoves,
@@ -353,9 +330,10 @@ export const evaluateHeuristic = (state: GameState): number | null => {
     if (availableMoves.length === 0) return null;
     if (availableMoves.length === 1) return availableMoves[0];
 
+    const deadline = performance.now() + TIME_BUDGET_MS;
     const fallbackMove = getOrderedMoves(state, availableMoves)[0].move;
     const context: SearchContext = {
-        deadline: performance.now() + TIME_BUDGET_MS,
+        deadline,
         nodes: 0,
         table: new Map(),
     };
@@ -364,6 +342,10 @@ export const evaluateHeuristic = (state: GameState): number | null => {
 
     for (let depth = 1; depth <= MAX_DEPTH; depth += 1) {
         if (performance.now() >= context.deadline) break;
+
+        // Entries from another iteration use a different remaining depth, so
+        // they cannot be reused safely and would only consume the table limit.
+        context.table.clear();
 
         try {
             const result = searchAtDepth(

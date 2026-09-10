@@ -1,36 +1,34 @@
 import type { CellPosition, RenderBoard } from "@/types/board";
 import type { GameState, Move, Player, GameResult } from "@/types/game";
 import type { GameWinLine, WinLineType } from "@/types/winLine";
+import {
+    areAllLocalBoardsClosed,
+    BOARD_CELL_COUNT,
+    FREE_CHOICE_BOARD,
+    isLocalBoardClosed,
+    WIN_LINES,
+    WIN_MASKS,
+} from "@/lib/gameRules";
+
+const ALL_BOARD_INDICES = Array.from(
+    { length: BOARD_CELL_COUNT },
+    (_, index) => index,
+);
 
 export const getUltimateBoard = (): GameState => {
     return {
-        x: new Uint16Array(9),
-        o: new Uint16Array(9),
+        x: new Uint16Array(BOARD_CELL_COUNT),
+        o: new Uint16Array(BOARD_CELL_COUNT),
         wonX: 0,
         wonO: 0,
-        nextBoard: 9,
+        nextBoard: FREE_CHOICE_BOARD,
         player: 0,
     };
 };
 
-const WIN_LINES: { mask: number; type: WinLineType }[] = [
-    { mask: 0b000000111, type: "row-0" },
-    { mask: 0b000111000, type: "row-1" },
-    { mask: 0b111000000, type: "row-2" },
-    { mask: 0b001001001, type: "col-0" },
-    { mask: 0b010010010, type: "col-1" },
-    { mask: 0b100100100, type: "col-2" },
-    { mask: 0b100010001, type: "diag-main" },
-    { mask: 0b001010100, type: "diag-anti" },
-];
-
 export const getWinningLine = (boardMask: number): WinLineType | null => {
     const match = WIN_LINES.find(({ mask }) => (boardMask & mask) === mask);
     return match ? match.type : null;
-};
-
-const isBoardFull = (boardMask: number): boolean => {
-    return boardMask === 0b111111111;
 };
 
 const getBoardIndexFromCell = (cellRow: number, cellCol: number): number => {
@@ -40,24 +38,20 @@ const getBoardIndexFromCell = (cellRow: number, cellCol: number): number => {
 export const getAvailableMoves = (state: GameState): number[] => {
     const availableMoves: number[] = [];
     const boards =
-        state.nextBoard === 9 ? [0, 1, 2, 3, 4, 5, 6, 7, 8] : [state.nextBoard];
+        state.nextBoard === FREE_CHOICE_BOARD
+            ? ALL_BOARD_INDICES
+            : [state.nextBoard];
 
     for (const boardIndex of boards) {
-        if (
-            (state.wonX & (1 << boardIndex)) !== 0 ||
-            (state.wonO & (1 << boardIndex)) !== 0 ||
-            isBoardFull(state.x[boardIndex] | state.o[boardIndex])
-        ) {
-            continue;
-        }
+        if (isLocalBoardClosed(state, boardIndex)) continue;
 
-        for (let cellIndex = 0; cellIndex < 9; cellIndex += 1) {
+        for (let cellIndex = 0; cellIndex < BOARD_CELL_COUNT; cellIndex += 1) {
             const bit = 1 << cellIndex;
             const isOccupied =
                 (state.x[boardIndex] & bit) !== 0 ||
                 (state.o[boardIndex] & bit) !== 0;
             if (!isOccupied) {
-                availableMoves.push(boardIndex * 9 + cellIndex);
+                availableMoves.push(boardIndex * BOARD_CELL_COUNT + cellIndex);
             }
         }
     }
@@ -72,13 +66,7 @@ const getAvailableBoardIndex = (
     const cellCol = lastMove.cell % 3;
     const forcedBoardIndex = getBoardIndexFromCell(cellRow, cellCol);
 
-    if (
-        (state.wonX & (1 << forcedBoardIndex)) !== 0 ||
-        (state.wonO & (1 << forcedBoardIndex)) !== 0 ||
-        isBoardFull(state.x[forcedBoardIndex] | state.o[forcedBoardIndex])
-    ) {
-        return 9;
-    }
+    if (isLocalBoardClosed(state, forcedBoardIndex)) return FREE_CHOICE_BOARD;
     return forcedBoardIndex;
 };
 
@@ -91,13 +79,13 @@ export const cloneUltimateBoard = (state: GameState): GameState => {
 };
 
 export const checkWinner = (board: number): boolean => {
-    return WIN_LINES.some(({ mask }) => (board & mask) === mask);
+    return WIN_MASKS.some((mask) => (board & mask) === mask);
 };
 
 export const checkGameWinner = (state: GameState): GameResult => {
     if (checkWinner(state.wonX)) return 0;
     if (checkWinner(state.wonO)) return 1;
-    if (isBoardFull(state.wonX | state.wonO)) return -1;
+    if (areAllLocalBoardsClosed(state)) return -1;
     return null;
 };
 
@@ -118,11 +106,11 @@ export const toRenderBoard = (state: GameState): RenderBoard => {
         })),
     );
 
-    for (let localBoard = 0; localBoard < 9; localBoard += 1) {
+    for (let localBoard = 0; localBoard < BOARD_CELL_COUNT; localBoard += 1) {
         const localRow = Math.floor(localBoard / 3);
         const localCol = localBoard % 3;
 
-        for (let cell = 0; cell < 9; cell += 1) {
+        for (let cell = 0; cell < BOARD_CELL_COUNT; cell += 1) {
             const bit = 1 << cell;
             const cellRow = Math.floor(cell / 3);
             const cellCol = cell % 3;
@@ -162,29 +150,23 @@ export const isAvailableCell = (
     const boardIndex = localRow * 3 + localCol;
     const cellIndex = cellRow * 3 + cellCol;
 
-    if (boardIndex < 0 || boardIndex > 8) {
-        return false;
-    }
-
-    if (state.nextBoard !== 9 && state.nextBoard !== boardIndex) {
+    if (boardIndex < 0 || boardIndex >= BOARD_CELL_COUNT) {
         return false;
     }
 
     if (
-        (state.wonX & (1 << boardIndex)) !== 0 ||
-        (state.wonO & (1 << boardIndex)) !== 0
+        state.nextBoard !== FREE_CHOICE_BOARD &&
+        state.nextBoard !== boardIndex
     ) {
         return false;
     }
+
+    if (isLocalBoardClosed(state, boardIndex)) return false;
 
     const occupied =
         (state.x[boardIndex] & (1 << cellIndex)) !== 0 ||
         (state.o[boardIndex] & (1 << cellIndex)) !== 0;
     if (occupied) {
-        return false;
-    }
-
-    if (isBoardFull(state.x[boardIndex] | state.o[boardIndex])) {
         return false;
     }
 
@@ -200,19 +182,12 @@ export const getAvailableLocalBoards = (
     const boardPositions: CellPosition[] = [];
 
     const boards =
-        state.nextBoard === 9 ? [0, 1, 2, 3, 4, 5, 6, 7, 8] : [state.nextBoard];
+        state.nextBoard === FREE_CHOICE_BOARD
+            ? ALL_BOARD_INDICES
+            : [state.nextBoard];
 
     for (const boardIndex of boards) {
-        if (
-            (state.wonX & (1 << boardIndex)) !== 0 ||
-            (state.wonO & (1 << boardIndex)) !== 0
-        ) {
-            continue;
-        }
-
-        if (isBoardFull(state.x[boardIndex] | state.o[boardIndex])) {
-            continue;
-        }
+        if (isLocalBoardClosed(state, boardIndex)) continue;
 
         const localRow = Math.floor(boardIndex / 3);
         const localCol = boardIndex % 3;
@@ -293,7 +268,7 @@ export const back = (
     }
 
     if (history.length === 1) {
-        previousState.nextBoard = 9;
+        previousState.nextBoard = FREE_CHOICE_BOARD;
         return { state: previousState, history: [] };
     }
     const secondLastMove = history[history.length - 2];
