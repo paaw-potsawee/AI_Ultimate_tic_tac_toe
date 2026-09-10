@@ -4,6 +4,7 @@ import { evaluateHeuristic } from "@/lib/heuristicSearch";
 import { GameMode } from "@/types/gameMode";
 import { evaluateBFS } from "@/lib/bfs";
 import { evaluateDFS } from "@/lib/dfs";
+import { BOARD_CELL_COUNT } from "@/lib/gameRules";
 
 export const getAiMove = (state: GameState, option: GameModeValue): Move => {
     let encoded: number | null;
@@ -25,13 +26,17 @@ export const getAiMove = (state: GameState, option: GameModeValue): Move => {
     if (encoded === null) {
         throw new Error("No available moves");
     }
+
+    const board = Math.floor(encoded / BOARD_CELL_COUNT);
+    const cell = encoded % BOARD_CELL_COUNT;
+
     return {
         player: state.player,
-        localRow: Math.floor(Math.floor(encoded / 9) / 3),
-        localCol: Math.floor(encoded / 9) % 3,
-        cellRow: Math.floor((encoded % 9) / 3),
-        cellCol: (encoded % 9) % 3,
-        board: Math.floor(encoded / 9),
-        cell: encoded % 9,
+        localRow: Math.floor(board / 3),
+        localCol: board % 3,
+        cellRow: Math.floor(cell / 3),
+        cellCol: cell % 3,
+        board,
+        cell,
     };
 };

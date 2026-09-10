@@ -7,9 +7,19 @@ export interface WorkerRequest {
     epoch: number;
 }
 
-export interface WorkerResponse {
+export interface WorkerSuccessResponse {
+    ok: true;
     board: number;
     cell: number;
     epoch: number;
     durationMs: number;
 }
+
+export interface WorkerErrorResponse {
+    ok: false;
+    error: string;
+    epoch: number;
+    durationMs: number;
+}
+
+export type WorkerResponse = WorkerSuccessResponse | WorkerErrorResponse;
