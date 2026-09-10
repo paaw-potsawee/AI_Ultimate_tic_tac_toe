@@ -1,5 +1,6 @@
 import type { GameState } from "@/types/game";
 import { getAvailableMoves, applyMove, checkGameWinner } from "@/lib/game";
+import { BOARD_CELL_COUNT } from "@/lib/gameRules";
 import { Queue } from "@/lib/queue";
 
 let nodesExplored = 0;
@@ -15,8 +16,8 @@ export const evaluateBFS = (state: GameState, depth: number): number | null => {
         depth: number;
     }>();
     for (let i = 0; i < availableMoves.length; i++) {
-        const boardIdx = Math.floor(availableMoves[i] / 9);
-        const cellIdx = availableMoves[i] % 9;
+        const boardIdx = Math.floor(availableMoves[i] / BOARD_CELL_COUNT);
+        const cellIdx = availableMoves[i] % BOARD_CELL_COUNT;
         const newState = applyMove(state, state.player, boardIdx, cellIdx);
         queue.enqueue({ state: newState, move: availableMoves[i], depth: 1 });
         nodesExplored++;
@@ -61,8 +62,8 @@ export const evaluateBFS = (state: GameState, depth: number): number | null => {
         // continue to explore
         const availableMoves = getAvailableMoves(currentState.state);
         for (let i = 0; i < availableMoves.length; i++) {
-            const boardIdx = Math.floor(availableMoves[i] / 9);
-            const cellIdx = availableMoves[i] % 9;
+            const boardIdx = Math.floor(availableMoves[i] / BOARD_CELL_COUNT);
+            const cellIdx = availableMoves[i] % BOARD_CELL_COUNT;
             const newState = applyMove(
                 currentState.state,
                 player,

@@ -46,29 +46,57 @@ const refreshAvailableBoards = () => {
     gameWinningLineSnapshot = getGameWinningLine(state);
 };
 
+const cancelAiWork = () => {
+    aiEpoch++;
+
+    if (aiDelayTimeout !== null) {
+        clearTimeout(aiDelayTimeout);
+        aiDelayTimeout = null;
+    }
+
+    if (aiWorker) {
+        aiWorker.terminate();
+        aiWorker = null;
+    }
+
+    isAiTurn = false;
+};
+
 const getWorker = () => {
     if (!aiWorker) {
-        aiWorker = new Worker(
+        const worker = new Worker(
             new URL("../workers/aiWorker.ts", import.meta.url),
             { type: "module" },
         );
-        aiWorker.onmessage = handleWorkerMessage;
-        aiWorker.onerror = (err) => {
+        worker.onmessage = handleWorkerMessage;
+        worker.onerror = (err) => {
+            if (aiWorker !== worker) return;
+
             console.error("AI worker error:", err);
-            isAiTurn = false;
+            cancelAiWork();
             emit();
         };
+        aiWorker = worker;
     }
     return aiWorker;
 };
 
 const handleWorkerMessage = (event: MessageEvent<WorkerResponse>) => {
-    const { board, cell, epoch, durationMs } = event.data;
+    const { epoch, durationMs } = event.data;
 
     // Discard stale moves if user undid, reset, or left the game
     if (epoch !== aiEpoch) {
         return;
     }
+
+    if (!event.data.ok) {
+        console.error("AI failed to calculate a move:", event.data.error);
+        cancelAiWork();
+        emit();
+        return;
+    }
+
+    const { board, cell } = event.data;
 
     console.log(`AI move took ${durationMs.toFixed(1)} milliseconds`);
 
@@ -103,6 +131,7 @@ const handleWorkerMessage = (event: MessageEvent<WorkerResponse>) => {
         if (option === GameMode.AIVAI) {
             aiDelayTimeout = setTimeout(() => {
                 if (epoch === aiEpoch) {
+                    aiDelayTimeout = null;
                     doAiMove();
                 }
             }, AIVAI_DELAY_MS);
@@ -168,15 +197,11 @@ const BoardStore = {
         BoardStore.clearBoard();
     },
     leaveGame() {
-        aiEpoch++;
-        if (aiDelayTimeout) {
-            clearTimeout(aiDelayTimeout);
-            aiDelayTimeout = null;
-        }
-        isAiTurn = false;
+        cancelAiWork();
+        emit();
     },
     clearBoard() {
-        BoardStore.leaveGame();
+        cancelAiWork();
         state = getUltimateBoard();
         currentPlayer = 0;
         winner = null;
@@ -192,6 +217,7 @@ const BoardStore = {
                 const currentEpoch = aiEpoch;
                 aiDelayTimeout = setTimeout(() => {
                     if (currentEpoch === aiEpoch) {
+                        aiDelayTimeout = null;
                         doAiMove();
                     }
                 }, AIVAI_DELAY_MS);
@@ -258,12 +284,7 @@ const BoardStore = {
 
         // If AI is currently calculating, cancel it and undo human's last move
         if (isAiTurn) {
-            aiEpoch++;
-            if (aiDelayTimeout) {
-                clearTimeout(aiDelayTimeout);
-                aiDelayTimeout = null;
-            }
-            isAiTurn = false;
+            cancelAiWork();
 
             const result = back(state, history);
             state = result.state;
@@ -275,10 +296,8 @@ const BoardStore = {
             return;
         }
 
-        if (aiDelayTimeout) {
-            aiEpoch++;
-            clearTimeout(aiDelayTimeout);
-            aiDelayTimeout = null;
+        if (aiDelayTimeout !== null) {
+            cancelAiWork();
         }
 
         let result = back(state, history);
