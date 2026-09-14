@@ -1,124 +1,152 @@
 # AI Ultimate Tic-Tac-Toe
 
-เว็บแอป Ultimate Tic-Tac-Toe สำหรับทดลองและเปรียบเทียบการค้นหาแบบ Blind Search กับ Heuristic Search พัฒนาขึ้นเป็นส่วนหนึ่งของวิชา Artificial Intelligence
+An Ultimate Tic-Tac-Toe web application for experimenting with and comparing Blind Search and Heuristic Search strategies, developed as part of an Artificial Intelligence course.
 
-## ความสามารถหลัก
+## Key Features
 
-- เล่นแบบผู้เล่นสองคนบนเครื่องเดียวกัน
-- เล่นกับ AI และเลือกฝั่ง X หรือ O ได้
-- เปรียบเทียบ Blind DFS, Blind BFS และ Heuristic AI
-- ดูการแข่งขันแบบ AI vs AI
-- รองรับ undo, reset, move history และแสดงเส้นที่ชนะ
-- ประมวลผล AI ใน Web Worker เพื่อไม่ให้หน้าเว็บค้าง
+- Local two-player pass-and-play mode
+- Play against AI with side selection (X or O)
+- Comparison between Blind DFS, Blind BFS, and Heuristic AI
+- Spectate AI vs AI matches
+- Move undo, board reset, move history tracking, and winning line visualization
+- Background AI computations via Web Worker to ensure a responsive UI
 
-## กติกาโดยย่อ
+## Game Rules
 
-Ultimate Tic-Tac-Toe ประกอบด้วยกระดานเล็ก 3×3 จำนวน 9 กระดาน ผู้เล่นที่ชนะกระดานเล็กจะยึดตำแหน่งนั้นบนกระดานใหญ่
+Ultimate Tic-Tac-Toe consists of nine 3×3 local boards arranged in a 3×3 grid. Winning a local board claims that position on the macro board.
 
-ตำแหน่งช่องที่เลือกในกระดานเล็กจะกำหนดกระดานที่คู่แข่งต้องเล่นในตาถัดไป หากกระดานเป้าหมายถูกชนะหรือเต็มแล้ว คู่แข่งสามารถเลือกกระดานที่ยังเล่นได้อย่างอิสระ ผู้เล่นที่ยึดกระดานเล็กเรียงกัน 3 ตำแหน่งบนกระดานใหญ่เป็นฝ่ายชนะ และเกมจะเสมอเมื่อกระดานเล็กทั้งหมดปิดโดยไม่มีผู้ชนะ
+The cell index chosen within a local board determines which local board the opponent must play on in the subsequent turn. If the targeted local board has already been won or is full, the opponent is granted a free move to play in any open local board. A player wins the game by aligning three claimed local boards in a row, column, or diagonal on the macro board. The game ends in a draw if all local boards are closed without a macro winner.
 
-## โหมดการเล่น
+## Game Modes
 
-| โหมดในหน้าเกม   | รายละเอียด                                                   |
-| --------------- | ------------------------------------------------------------ |
-| Player          | ผู้เล่นสองคนเล่นสลับกัน                                      |
-| The Heuristic   | เล่นกับ Minimax AI ที่มี heuristic evaluation                |
-| The Blind (DFS) | เล่นกับ AI ที่ค้นหาแบบ Depth-First Search ความลึก 5 ชั้น     |
-| The Blind (BFS) | เล่นกับ AI ที่ค้นหาแบบ Breadth-First Search ความลึก 5 ชั้น   |
-| AI vs AI        | ให้ Heuristic AI เล่นทั้งสองฝั่ง โดยเว้นช่วงระหว่างตา 500 ms |
+| Mode in Game    | Description                                                       |
+| --------------- | ----------------------------------------------------------------- |
+| Player          | Two players alternating turns locally                             |
+| The Heuristic   | Play against a Minimax AI with heuristic evaluation               |
+| The Blind (DFS) | Play against an AI using Depth-First Search with depth 5          |
+| The Blind (BFS) | Play against an AI using Breadth-First Search with depth 5        |
+| AI vs AI        | Watch two Heuristic AIs compete with a 500 ms delay between turns |
 
 ## Heuristic AI
 
-Heuristic AI ใช้ iterative-deepening Minimax ร่วมกับ alpha-beta pruning โดยมีความลึกสูงสุด 10 ชั้นและ soft time budget 900 ms ต่อตา
+The Heuristic AI uses iterative-deepening Minimax with alpha-beta pruning, featuring a maximum search depth of 10 and a soft time budget of 900 ms per move.
 
-การประเมินสถานะพิจารณาจาก:
+Board state evaluation considers:
 
-- การยึดกระดานเล็กและตำแหน่งของกระดานนั้นบนกระดานใหญ่
-- จำนวนหมากหนึ่งหรือสองตัวในแนวชนะ ทั้งระดับ local และ macro board
-- น้ำหนักของช่องกลาง มุม และขอบ
-- ความได้เปรียบจากการเลือกกระดานได้อย่างอิสระ
-- ผลชนะ เสมอ และระยะที่เหลือก่อนถึง terminal state
+- Claimed local boards and their strategic positions on the macro board.
+- One-in-a-line and two-in-a-line configurations on both local and macro levels.
+- Positional weightings for center, corner, and edge cells.
+- Advantage of granting or denying the opponent free board choice.
+- Terminal game states (win, loss, draw) and distance to terminal depth.
 
-ระบบใช้ move ordering และ transposition table เพื่อช่วยลดจำนวนโหนดที่ต้องค้นหา โดยล้าง cache ก่อนเริ่ม iterative depth ใหม่เพื่อไม่ให้ข้อมูลคนละความลึกกินพื้นที่ร่วมกัน
+The search engine employs move ordering and a transposition table to prune branches, refreshing the transposition cache across iterative deepening depths.
 
-## เทคโนโลยี
+## Tech Stack
 
-- React 19 และ TypeScript 6
+- React 19 and TypeScript 6
 - Vite 8
 - Tailwind CSS 4
 - Web Worker
-- Vitest, jsdom และ React Testing Library
-- Bitboard ด้วย `Uint16Array` สำหรับเก็บสถานะกระดาน
+- Vitest, jsdom, and React Testing Library
+- Bitboard representation with `Uint16Array` for high-performance board state evaluation
 
-## เริ่มต้นใช้งาน
+## Getting Started
 
-### สิ่งที่ต้องมี
+### Prerequisites
 
-- Node.js 22.12 ขึ้นไป
-- npm
+- Node.js 22.12+ (or Bun)
+- npm or Bun
 
-### ติดตั้งและรัน
+### Installation & Running
+
+Using Bun:
+
+```shell
+bun install
+bun run dev
+```
+
+Or using npm:
 
 ```shell
 npm install
 npm run dev
 ```
 
-เปิด URL ที่ Vite แสดงใน terminal ซึ่งโดยปกติคือ `http://localhost:5173`
+Open the URL shown in your terminal (typically `http://localhost:5173`).
 
-### รันด้วย Docker
+### Running with Docker
 
-Docker image ใช้ Bun สำหรับ build และใช้ Nginx สำหรับเสิร์ฟไฟล์ production
+The multi-stage Docker build uses Bun for building the static assets and Nginx for serving production files:
 
 ```shell
 docker compose up --build
 ```
 
-จากนั้นเปิด `http://localhost:3000`
+Then navigate to `http://localhost:3000`.
 
-## คำสั่งที่ใช้บ่อย
+## Available Scripts
 
-| คำสั่ง            | หน้าที่                                                |
-| ----------------- | ------------------------------------------------------ |
-| `npm run dev`     | เปิด development server                                |
-| `npm test`        | Type-check tests และรัน regression tests ด้วย Vitest   |
-| `npm run build`   | Type-check production source และสร้าง production build |
-| `npm run lint`    | ตรวจโค้ดด้วย Oxlint                                    |
-| `npm run format`  | จัดรูปแบบไฟล์ด้วย Prettier                             |
-| `npm run preview` | เปิดดู production build ในเครื่อง                      |
+| Command           | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| `npm run dev`     | Starts the development server                                |
+| `npm test`        | Type-checks tests and runs regression test suite with Vitest |
+| `npm run build`   | Type-checks production source and builds for production      |
+| `npm run lint`    | Lints code with Oxlint                                       |
+| `npm run format`  | Formats files using Prettier and Tailwind plugin             |
+| `npm run preview` | Previews the production build locally                        |
 
-## โครงสร้างโปรเจกต์
+_(You can also use `bun run <script>` or `bun test`)_
+
+## Project Structure
+
+The codebase is organized using a feature-driven modular architecture:
 
 ```text
 src/
-├── components/          React UI components
+├── components/                 # Shared UI and setup components
+│   ├── header/                 # Application header (Header.tsx)
+│   ├── setup/                  # Setup screens (SelectMode.tsx, SelectSide.tsx)
+│   └── ui/                     # Reusable primitive UI components (Button.tsx)
+├── features/
+│   ├── ai/                     # AI feature module
+│   │   ├── engine/             # Pure, worker-safe search algorithms (zero React dependencies)
+│   │   │   ├── ai.ts           # Strategy dispatcher (DFS, BFS, Heuristic)
+│   │   │   ├── bfs.ts          # Breadth-First Search implementation
+│   │   │   ├── dfs.ts          # Depth-First Search implementation
+│   │   │   ├── heuristicSearch.ts # Minimax with Alpha-Beta pruning & Transposition Table
+│   │   │   └── queue.ts        # Queue data structure for BFS traversal
+│   │   ├── hooks/              # React lifecycle integration
+│   │   │   └── useAiWorker.ts  # Worker lifecycle hook, bridges Web Worker to board store
+│   │   ├── types/              # AI and worker message types
+│   │   │   └── aiWorker.ts     # WorkerRequest and WorkerResponse types
+│   │   ├── worker/             # Dedicated Web Worker thread
+│   │   │   └── aiWorker.ts     # Worker entrypoint (imports directly from engine/ and types/)
+│   │   └── index.ts            # Public API (exports useAiWorker and worker message types)
+│   └── board/                  # Ultimate Tic-Tac-Toe board domain feature
+│       ├── components/         # Board visual components (UltimateBoard, LocalBoard, Cell, etc.)
+│       ├── store/              # State management and external store integration
+│       │   └── boardStore.ts   # Board state, move handling, undo/reset, & AI notifications
+│       ├── types/              # Board domain types (board.ts, game.ts, winLine.ts)
+│       ├── game.ts             # Core game engine (rules, move validation, win detection)
+│       ├── gameRules.ts        # Constants, bitmasks, and win line definitions
+│       └── index.ts            # Public API for board components and game types
 ├── lib/
-│   ├── gameRules.ts     Constants, win masks และ board-state helpers
-│   ├── game.ts          กติกา การสร้างสถานะ และการเดินหมาก
-│   ├── heuristicSearch.ts
-│   ├── bfs.ts
-│   ├── dfs.ts
-│   └── ai.ts            เลือก AI และแปลง encoded move
-├── store/               Game state และ AI worker lifecycle
-├── types/               Shared TypeScript types
-└── workers/             Web Worker สำหรับคำนวณตาของ AI
+│   └── cn.ts                   # Tailwind CSS class merge utility (clsx + tailwind-merge)
+├── types/
+│   └── gameMode.ts             # Shared application-wide game mode definitions
+├── App.tsx                     # Top-level screen coordinator & mounts useAiWorker
+├── main.tsx                    # Application entrypoint
+└── index.css                   # Global styles & Tailwind CSS theme configuration
 
 tests/
-├── lib/                 Game rules และ heuristic regression tests
-├── store/               Store และ worker lifecycle tests
-└── workers/             Worker response protocol tests
+├── lib/                        # Game rules and heuristic regression tests
+├── store/                      # BoardStore and AI worker lifecycle tests
+└── workers/                    # Worker response protocol tests
 ```
 
-Production TypeScript config ตรวจเฉพาะ `src/` ส่วน `tsconfig.test.json` ครอบคลุมทั้ง `src/` และ `tests/` ปัจจุบันมี regression tests 16 กรณี
+### Architectural Highlights
 
-## อัปเดตล่าสุด — 10 กันยายน 2026
-
-- ลดเวลาคิดของ Heuristic AI จาก 9 วินาทีเหลือ 900 ms
-- ปรับ transposition table ให้เริ่ม cache ใหม่ในแต่ละ iterative depth
-- แก้การตรวจผลเสมอให้รองรับ local board ที่เต็มแต่ไม่มีผู้ชนะ
-- เพิ่มการ terminate AI worker เมื่อ undo, reset หรือออกจากเกม
-- เพิ่ม success/error response protocol เพื่อป้องกัน UI ค้างเมื่อ worker ล้มเหลว
-- รวม board constants, win masks และ board-state helpers ไว้ใน `gameRules.ts`
-- ลด magic number และการ decode encoded move ที่ซ้ำใน Heuristic, BFS, DFS และ AI adapter
-- ย้าย test files ออกจาก production source ไปยัง `tests/`
-- เพิ่ม Vitest regression suite ครอบคลุม game result, heuristic และ worker lifecycle
+- **Feature Modularization**: Core domain logic is encapsulated under `features/board` and `features/ai`, each exposing a curated public API via `index.ts`.
+- **Worker Isolation**: `aiWorker.ts` runs inside a dedicated Web Worker thread. It imports directly from `../engine` and `../types` via relative paths, avoiding barrel imports and React dependencies.
+- **Hook-Store Decoupling**: `useAiWorker` manages the Worker lifecycle in the React component tree and registers triggers with `boardStore`, keeping the store free of direct Worker instantiation.
