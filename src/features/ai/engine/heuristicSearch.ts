@@ -1,12 +1,14 @@
-import type { GameResult, GameState } from "@/types/game";
-import { applyMove, checkGameWinner, getAvailableMoves } from "@/lib/game";
+import type { GameResult, GameState } from "@/features/board";
 import {
+    applyMove,
+    checkGameWinner,
+    getAvailableMoves,
     BOARD_CELL_COUNT,
     FREE_CHOICE_BOARD,
     FULL_BOARD_MASK,
     isLocalBoardFull,
     WIN_MASKS,
-} from "@/lib/gameRules";
+} from "@/features/board";
 
 const WIN_SCORE = 1_000_000;
 const MAX_DEPTH = 10;

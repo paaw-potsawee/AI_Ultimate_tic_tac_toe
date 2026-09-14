@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getUltimateBoard } from "@/lib/game";
-import type { WorkerRequest, WorkerResponse } from "@/types/aiWorker";
+import { getUltimateBoard } from "@/features/board";
+import type { WorkerRequest, WorkerResponse } from "@/features/ai";
 import { GameMode } from "@/types/gameMode";
 
 const mocks = vi.hoisted(() => ({
     getAiMove: vi.fn(),
 }));
 
-vi.mock("@/lib/ai", () => ({
+vi.mock("@/features/ai/engine/ai", () => ({
     getAiMove: mocks.getAiMove,
 }));
 
@@ -31,7 +31,7 @@ describe("AI worker response protocol", () => {
         );
         vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-        await import("@/workers/aiWorker");
+        await import("@/features/ai/worker/aiWorker");
     });
 
     afterEach(() => {

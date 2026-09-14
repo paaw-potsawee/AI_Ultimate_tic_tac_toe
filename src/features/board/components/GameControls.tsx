@@ -1,5 +1,5 @@
-import { useBoardStore, useGameConfigStore } from "@/store/boardStore";
-import Button from "@/components/ui/Button";
+import { useBoardStore, useGameConfigStore } from "../store/boardStore";
+import { Button } from "@/components/ui";
 
 interface Props {
     onBackToSetup: () => void;

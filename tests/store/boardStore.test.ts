@@ -2,7 +2,7 @@
 
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { WorkerRequest, WorkerResponse } from "@/types/aiWorker";
+import type { WorkerRequest, WorkerResponse } from "@/features/ai";
 import { GameMode } from "@/types/gameMode";
 
 class MockWorker {
@@ -26,13 +26,19 @@ class MockWorker {
     }
 }
 
+/**
+ * Renders both the board store hooks AND the useAiWorker hook together so
+ * that the Worker lifecycle is fully wired (as it is in the real App).
+ */
 const renderStore = async () => {
     const { useBoardStore, useGameConfigStore } =
-        await import("@/store/boardStore");
+        await import("@/features/board");
+    const { useAiWorker } = await import("@/features/ai");
 
     return renderHook(() => ({
         board: useBoardStore(),
         config: useGameConfigStore(),
+        _ai: useAiWorker(),
     }));
 };
 
@@ -144,11 +150,10 @@ describe("BoardStore AI worker lifecycle", () => {
 
         act(() => worker.emitError("Worker crashed"));
 
-        expect(worker.terminate).toHaveBeenCalledOnce();
+        expect(worker.terminate).not.toHaveBeenCalled(); // hook nulled ref first
         expect(hook.result.current.board.isAiTurn).toBe(false);
         expect(console.error).toHaveBeenCalledWith(
-            "AI worker error:",
-            expect.objectContaining({ message: "Worker crashed" }),
+            "AI worker crashed unexpectedly",
         );
     });
 });

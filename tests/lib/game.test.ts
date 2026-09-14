@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkGameWinner, getUltimateBoard } from "@/lib/game";
+import { checkGameWinner, getUltimateBoard } from "@/features/board";
 
 const DRAWN_X_BOARD = 0b110001101;
 const DRAWN_O_BOARD = 0b001110010;

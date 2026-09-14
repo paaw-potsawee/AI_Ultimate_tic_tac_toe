@@ -1,5 +1,5 @@
-import type { Player } from "@/types/game";
-import Button from "@/components/ui/Button";
+import type { Player } from "@/features/board";
+import { Button } from "@/components/ui";
 
 interface Props {
     onStartGame: (side: Player) => void;

@@ -1,6 +1,6 @@
-import type { CellPosition, RenderBoard } from "@/types/board";
-import type { GameState, Move, Player, GameResult } from "@/types/game";
-import type { GameWinLine, WinLineType } from "@/types/winLine";
+import type { CellPosition, RenderBoard } from "./types/board";
+import type { GameState, Move, Player, GameResult } from "./types/game";
+import type { GameWinLine, WinLineType } from "./types/winLine";
 import {
     areAllLocalBoardsClosed,
     BOARD_CELL_COUNT,
@@ -8,7 +8,7 @@ import {
     isLocalBoardClosed,
     WIN_LINES,
     WIN_MASKS,
-} from "@/lib/gameRules";
+} from "./gameRules";
 
 const ALL_BOARD_INDICES = Array.from(
     { length: BOARD_CELL_COUNT },

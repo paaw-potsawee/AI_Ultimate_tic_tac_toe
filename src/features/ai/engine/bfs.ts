@@ -1,7 +1,11 @@
-import type { GameState } from "@/types/game";
-import { getAvailableMoves, applyMove, checkGameWinner } from "@/lib/game";
-import { BOARD_CELL_COUNT } from "@/lib/gameRules";
-import { Queue } from "@/lib/queue";
+import type { GameState } from "@/features/board";
+import {
+    getAvailableMoves,
+    applyMove,
+    checkGameWinner,
+    BOARD_CELL_COUNT,
+} from "@/features/board";
+import { Queue } from "./queue";
 
 let nodesExplored = 0;
 

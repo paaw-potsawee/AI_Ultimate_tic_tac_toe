@@ -1,5 +1,5 @@
-import type { GameState } from "@/types/game";
-import type { WinLineType } from "@/types/winLine";
+import type { GameState } from "./types/game";
+import type { WinLineType } from "./types/winLine";
 
 export const BOARD_CELL_COUNT = 9;
 export const FREE_CHOICE_BOARD = BOARD_CELL_COUNT;

@@ -1,4 +1,4 @@
-import { useBoardStore, useGameConfigStore } from "@/store/boardStore";
+import { useBoardStore, useGameConfigStore } from "../store/boardStore";
 import { gameModeOptions } from "@/types/gameMode";
 
 const PlayerInfo = () => {

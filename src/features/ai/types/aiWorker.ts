@@ -1,4 +1,4 @@
-import type { GameState } from "@/types/game";
+import type { GameState } from "@/features/board";
 import type { GameModeValue } from "@/types/gameMode";
 
 export interface WorkerRequest {

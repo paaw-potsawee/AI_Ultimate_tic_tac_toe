@@ -1,5 +1,5 @@
 import { cn } from "@/lib/cn";
-import type { WinLineType } from "@/types/winLine";
+import type { WinLineType } from "../types/winLine";
 
 interface Props {
     line: WinLineType;

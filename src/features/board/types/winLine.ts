@@ -1,4 +1,4 @@
-import type { Player } from "@/types/game";
+import type { Player } from "./game";
 
 export type WinLineType =
     | "row-0"

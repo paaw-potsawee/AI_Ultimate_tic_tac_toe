@@ -1,4 +1,4 @@
-import type { WinLineType } from "@/types/winLine";
+import type { WinLineType } from "./winLine";
 
 export interface CellPosition {
     localRow: number;

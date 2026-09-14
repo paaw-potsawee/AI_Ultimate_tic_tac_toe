@@ -1,9 +1,9 @@
-import Cell from "@/components/board/Cell";
-import O from "@/components/board/O";
-import WinningSlash from "@/components/board/WinningSlash";
-import X from "@/components/board/X";
+import Cell from "./Cell";
+import O from "./O";
+import WinningSlash from "./WinningSlash";
+import X from "./X";
 import { cn } from "@/lib/cn";
-import { useBoardStore } from "@/store/boardStore";
+import { useBoardStore } from "../store/boardStore";
 
 interface Props {
     localRow: number;

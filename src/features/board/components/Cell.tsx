@@ -1,7 +1,7 @@
-import { useBoardStore } from "@/store/boardStore";
-import { type CellPosition } from "@/types/board";
-import X from "@/components/board/X";
-import O from "@/components/board/O";
+import { useBoardStore } from "../store/boardStore";
+import type { CellPosition } from "../types/board";
+import X from "./X";
+import O from "./O";
 
 interface CellProps {
     cellClickProps: CellPosition;

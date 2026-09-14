@@ -1,10 +1,10 @@
 import type { GameModeValue } from "@/types/gameMode";
-import type { GameState, Move } from "@/types/game";
-import { evaluateHeuristic } from "@/lib/heuristicSearch";
+import type { GameState, Move } from "@/features/board";
+import { evaluateHeuristic } from "./heuristicSearch";
 import { GameMode } from "@/types/gameMode";
-import { evaluateBFS } from "@/lib/bfs";
-import { evaluateDFS } from "@/lib/dfs";
-import { BOARD_CELL_COUNT } from "@/lib/gameRules";
+import { evaluateBFS } from "./bfs";
+import { evaluateDFS } from "./dfs";
+import { BOARD_CELL_COUNT } from "@/features/board";
 
 export const getAiMove = (state: GameState, option: GameModeValue): Move => {
     let encoded: number | null;

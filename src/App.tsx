@@ -1,16 +1,20 @@
 import { useState } from "react";
-import UltimateBoard from "@/components/board/UltimateBoard";
-import GameStatus from "@/components/board/GameStatus";
-import PlayerInfo from "@/components/board/PlayerInfo";
-import GameControls from "@/components/board/GameControls";
-import MoveHistory from "@/components/board/MoveHistory";
-import Header from "@/components/header/Header";
-import SelectMode from "@/components/setup/SelectMode";
-import SelectSide from "@/components/setup/SelectSide";
-import { useGameConfigStore } from "@/store/boardStore";
+import {
+    UltimateBoard,
+    GameStatus,
+    PlayerInfo,
+    GameControls,
+    MoveHistory,
+    useGameConfigStore,
+} from "@/features/board";
+import { useAiWorker } from "@/features/ai";
+import { Header } from "@/components/header";
+import { SelectMode, SelectSide } from "@/components/setup";
 import { GameMode, type GameModeValue } from "@/types/gameMode";
 
 function App() {
+    // Manages the AI Web Worker lifecycle and wires it to the board store.
+    useAiWorker();
     const [screen, setScreen] = useState<
         "select-mode" | "select-side" | "board"
     >("select-mode");

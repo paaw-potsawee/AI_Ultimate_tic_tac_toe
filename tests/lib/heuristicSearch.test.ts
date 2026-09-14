@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getAvailableMoves, getUltimateBoard } from "@/lib/game";
-import { evaluateHeuristic } from "@/lib/heuristicSearch";
+import { getAvailableMoves, getUltimateBoard } from "@/features/board";
+import { evaluateHeuristic } from "@/features/ai/engine/heuristicSearch";
 
 describe("evaluateHeuristic", () => {
     it.each([

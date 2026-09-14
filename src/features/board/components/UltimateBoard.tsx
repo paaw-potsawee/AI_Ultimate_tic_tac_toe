@@ -1,6 +1,6 @@
-import LocalBoard from "@/components/board/LocalBoard";
-import WinningSlash from "@/components/board/WinningSlash";
-import { useBoardStore } from "@/store/boardStore";
+import LocalBoard from "./LocalBoard";
+import WinningSlash from "./WinningSlash";
+import { useBoardStore } from "../store/boardStore";
 
 const UltimateBoard = () => {
     const { board, gameWinningLine } = useBoardStore();

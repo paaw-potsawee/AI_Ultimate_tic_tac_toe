@@ -1,5 +1,5 @@
-import { getAiMove } from "@/lib/ai";
-import type { WorkerRequest, WorkerResponse } from "@/types/aiWorker";
+import { getAiMove } from "../engine/ai";
+import type { WorkerRequest, WorkerResponse } from "../types/aiWorker";
 
 addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
     const { state, option, epoch } = event.data;

@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
-import type { CellPosition } from "@/types/board";
-import type { Move, Player, GameResult } from "@/types/game";
+import type { CellPosition } from "../types/board";
+import type { Move, Player, GameResult } from "../types/game";
 import {
     applyMove,
     checkGameWinner,
@@ -10,9 +10,13 @@ import {
     isAvailableCell,
     toRenderBoard,
     back,
-} from "@/lib/game";
+} from "../game";
 import { GameMode, type GameModeValue } from "@/types/gameMode";
-import type { WorkerRequest, WorkerResponse } from "@/types/aiWorker";
+import type { WorkerRequest } from "@/features/ai";
+
+// ---------------------------------------------------------------------------
+// Module-level game state
+// ---------------------------------------------------------------------------
 
 let state = getUltimateBoard();
 let currentPlayer: Player = 0;
@@ -28,10 +32,17 @@ let gameWinningLineSnapshot = getGameWinningLine(state);
 let humanPlayer: Player = 0;
 let isAiTurn = false;
 
-let aiWorker: Worker | null = null;
 let aiEpoch = 0;
 let aiDelayTimeout: ReturnType<typeof setTimeout> | null = null;
 const AIVAI_DELAY_MS = 500;
+
+// Registered by the useAiWorker hook — null until the hook mounts.
+let _triggerMove: ((request: WorkerRequest) => void) | null = null;
+let _terminateWorker: (() => void) | null = null;
+
+// ---------------------------------------------------------------------------
+// Internal pub/sub
+// ---------------------------------------------------------------------------
 
 const listeners: Set<() => void> = new Set();
 const optionListeners: Set<() => void> = new Set();
@@ -46,6 +57,10 @@ const refreshAvailableBoards = () => {
     gameWinningLineSnapshot = getGameWinningLine(state);
 };
 
+// ---------------------------------------------------------------------------
+// Internal AI orchestration helpers
+// ---------------------------------------------------------------------------
+
 const cancelAiWork = () => {
     aiEpoch++;
 
@@ -54,49 +69,40 @@ const cancelAiWork = () => {
         aiDelayTimeout = null;
     }
 
-    if (aiWorker) {
-        aiWorker.terminate();
-        aiWorker = null;
-    }
-
+    _terminateWorker?.();
     isAiTurn = false;
 };
 
-const getWorker = () => {
-    if (!aiWorker) {
-        const worker = new Worker(
-            new URL("../workers/aiWorker.ts", import.meta.url),
-            { type: "module" },
-        );
-        worker.onmessage = handleWorkerMessage;
-        worker.onerror = (err) => {
-            if (aiWorker !== worker) return;
+const doAiMove = () => {
+    if (winner !== null || option === GameMode.PVP || _triggerMove === null)
+        return;
 
-            console.error("AI worker error:", err);
-            cancelAiWork();
-            emit();
-        };
-        aiWorker = worker;
-    }
-    return aiWorker;
+    isAiTurn = true;
+    emit();
+
+    _triggerMove({ state, option, epoch: aiEpoch });
 };
 
-const handleWorkerMessage = (event: MessageEvent<WorkerResponse>) => {
-    const { epoch, durationMs } = event.data;
+// ---------------------------------------------------------------------------
+// AI worker integration — exported for use by useAiWorker hook ONLY
+// ---------------------------------------------------------------------------
 
-    // Discard stale moves if user undid, reset, or left the game
-    if (epoch !== aiEpoch) {
-        return;
-    }
+export const registerAiWorker = (
+    trigger: (request: WorkerRequest) => void,
+    terminate: () => void,
+): void => {
+    _triggerMove = trigger;
+    _terminateWorker = terminate;
+};
 
-    if (!event.data.ok) {
-        console.error("AI failed to calculate a move:", event.data.error);
-        cancelAiWork();
-        emit();
-        return;
-    }
-
-    const { board, cell } = event.data;
+export const notifyAiMoveResult = (
+    board: number,
+    cell: number,
+    durationMs: number,
+    epoch: number,
+): void => {
+    // Discard stale responses (user undid, reset, or left the game).
+    if (epoch !== aiEpoch) return;
 
     console.log(`AI move took ${durationMs.toFixed(1)} milliseconds`);
 
@@ -122,15 +128,16 @@ const handleWorkerMessage = (event: MessageEvent<WorkerResponse>) => {
     refreshAvailableBoards();
     emit();
 
-    // Trigger next AI move if necessary (e.g. AI vs AI, or player vs AI)
+    // Trigger the next AI move if still needed (AI vs AI, or AI's turn again).
     if (
         option !== GameMode.PVP &&
         winner === null &&
         (option === GameMode.AIVAI || currentPlayer !== humanPlayer)
     ) {
         if (option === GameMode.AIVAI) {
+            const currentEpoch = aiEpoch;
             aiDelayTimeout = setTimeout(() => {
-                if (epoch === aiEpoch) {
+                if (currentEpoch === aiEpoch) {
                     aiDelayTimeout = null;
                     doAiMove();
                 }
@@ -141,20 +148,30 @@ const handleWorkerMessage = (event: MessageEvent<WorkerResponse>) => {
     }
 };
 
-const doAiMove = () => {
-    if (winner !== null || option === GameMode.PVP) return;
-
-    isAiTurn = true;
+/**
+ * Called by useAiWorker when the Worker posts an error response (ok: false).
+ * The epoch check ensures stale error responses are silently discarded.
+ */
+export const notifyAiError = (error: string, epoch: number): void => {
+    if (epoch !== aiEpoch) return;
+    console.error("AI failed to calculate a move:", error);
+    cancelAiWork();
     emit();
-
-    const request: WorkerRequest = {
-        state,
-        option,
-        epoch: aiEpoch,
-    };
-
-    getWorker().postMessage(request);
 };
+
+/**
+ * Called by useAiWorker when the Worker crashes (onerror event).
+ * No epoch check — a crash always resets AI state.
+ */
+export const notifyWorkerCrash = (): void => {
+    console.error("AI worker crashed unexpectedly");
+    cancelAiWork();
+    emit();
+};
+
+// ---------------------------------------------------------------------------
+// BoardStore object (board state + game lifecycle)
+// ---------------------------------------------------------------------------
 
 const BoardStore = {
     subscribe(cb: () => void) {
@@ -282,7 +299,6 @@ const BoardStore = {
             return;
         }
 
-        // If AI is currently calculating, cancel it and undo human's last move
         if (isAiTurn) {
             cancelAiWork();
 
@@ -317,6 +333,10 @@ const BoardStore = {
         emit();
     },
 };
+
+// ---------------------------------------------------------------------------
+// React hooks (useSyncExternalStore wrappers)
+// ---------------------------------------------------------------------------
 
 export const useBoardStore = () => {
     const board = useSyncExternalStore(
