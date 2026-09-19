@@ -51,9 +51,9 @@ export const evaluateDFS = (state: GameState, depth: number): number | null => {
             `Move: Board ${boardIdx}, Cell ${cellIdx}, Score: ${score}, Total Nodes Explored: ${nodesExplored}`,
         );
 
-        // accept move that doesn't lead to a loss
+        // accept first move that doesn't lead to a loss
         if (score > 0) {
-            return i;
+            return availableMoves[i];
         }
     }
     // fallback to first move if all moves lead to a loss
