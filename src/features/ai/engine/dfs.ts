@@ -33,6 +33,7 @@ const dfs = (state: GameState, depth: number = 5): number => {
 };
 
 export const evaluateDFS = (state: GameState, depth: number): number | null => {
+    nodesExplored = 0;
     const availableMoves = getAvailableMoves(state);
     if (availableMoves.length === 0) {
         return null;

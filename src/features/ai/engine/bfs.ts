@@ -10,6 +10,7 @@ import { Queue } from "./queue";
 let nodesExplored = 0;
 
 export const evaluateBFS = (state: GameState, depth: number): number | null => {
+    nodesExplored = 0;
     const availableMoves = getAvailableMoves(state);
     if (availableMoves.length === 0) {
         return null;
@@ -28,8 +29,6 @@ export const evaluateBFS = (state: GameState, depth: number): number | null => {
     }
 
     let bestNoneLosingMove: number | null = null;
-
-    let player = state.player;
 
     while (!queue.isEmpty()) {
         const currentState = queue.dequeue();
@@ -56,21 +55,18 @@ export const evaluateBFS = (state: GameState, depth: number): number | null => {
                 continue;
             }
         }
-        if (bestNoneLosingMove !== null) {
-            bestNoneLosingMove = currentState.move;
-        }
 
         if (currentState.depth >= depth) {
             continue;
         }
-        // continue to explore
+        // continue to explore; use currentState.state.player so turns alternate correctly
         const availableMoves = getAvailableMoves(currentState.state);
         for (let i = 0; i < availableMoves.length; i++) {
             const boardIdx = Math.floor(availableMoves[i] / BOARD_CELL_COUNT);
             const cellIdx = availableMoves[i] % BOARD_CELL_COUNT;
             const newState = applyMove(
                 currentState.state,
-                player,
+                currentState.state.player,
                 boardIdx,
                 cellIdx,
             );
