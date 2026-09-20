@@ -48,7 +48,13 @@ export const doAiMove = (): void => {
 };
 
 export const startAiTurn = (delayForAiVsAi = false): void => {
-    if (store.option === GameMode.PVP) return;
+    if (
+        store.option === GameMode.PVP ||
+        (store.option !== GameMode.AIVAI &&
+            store.currentPlayer === store.humanPlayer)
+    ) {
+        return;
+    }
 
     if (delayForAiVsAi && store.option === GameMode.AIVAI) {
         const currentEpoch = aiEpoch;
