@@ -1,5 +1,6 @@
 import { useBoardStore } from "../store/boardStore";
 import type { CellPosition } from "../types/board";
+import { cn } from "@/lib/cn";
 import X from "./X";
 import O from "./O";
 
@@ -15,13 +16,12 @@ const Cell = ({ cellClickProps }: CellProps) => {
     return (
         <button
             type="button"
-            className={`flex aspect-square w-[10vw] max-w-16 items-center justify-center bg-orange p-0 transition-colors ${
+            className={cn(
+                "flex aspect-square w-[10vw] max-w-16 items-center justify-center bg-orange p-0 transition-colors",
                 isAiTurn
                     ? "cursor-not-allowed opacity-70"
-                    : value
-                      ? ""
-                      : "hover:bg-sunset-400"
-            }`}
+                    : !value && "hover:bg-sunset-400",
+            )}
             onClick={() => handleCellClick(cellClickProps)}
             disabled={isAiTurn}
         >
