@@ -6,7 +6,11 @@ import {
     getUltimateBoard,
     toRenderBoard,
 } from "../game";
-import { GameMode, type GameModeValue } from "@/types/gameMode";
+import {
+    GameMode,
+    type AiModeValue,
+    type GameModeValue,
+} from "@/types/gameMode";
 
 const initialState = getUltimateBoard();
 
@@ -17,6 +21,10 @@ export const store = {
     history: [] as Move[],
     availableLocalBoards: [] as CellPosition[],
     option: GameMode.HEURISTIC_AI as GameModeValue,
+    aiPlayers: [GameMode.HEURISTIC_AI, GameMode.HEURISTIC_AI] as [
+        AiModeValue,
+        AiModeValue,
+    ],
     humanPlayer: 0 as Player,
     isAiTurn: false,
     boardSnapshot: toRenderBoard(initialState) as RenderBoard,

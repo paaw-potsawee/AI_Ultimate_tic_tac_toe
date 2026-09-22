@@ -44,7 +44,11 @@ describe("AI worker response protocol", () => {
         mocks.getAiMove.mockReturnValue({ board: 4, cell: 4 });
 
         messageHandler({
-            data: { state, option: GameMode.HEURISTIC_AI, epoch: 3 },
+            data: {
+                state,
+                algorithm: GameMode.HEURISTIC_AI,
+                epoch: 3,
+            },
         } as MessageEvent<WorkerRequest>);
 
         expect(postMessageMock).toHaveBeenCalledWith(
@@ -65,7 +69,11 @@ describe("AI worker response protocol", () => {
         });
 
         messageHandler({
-            data: { state, option: GameMode.HEURISTIC_AI, epoch: 8 },
+            data: {
+                state,
+                algorithm: GameMode.HEURISTIC_AI,
+                epoch: 8,
+            },
         } as MessageEvent<WorkerRequest>);
 
         expect(postMessageMock).toHaveBeenCalledWith(

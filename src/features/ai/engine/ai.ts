@@ -1,4 +1,4 @@
-import type { GameModeValue } from "@/types/gameMode";
+import type { AiModeValue } from "@/types/gameMode";
 import type { GameState, Move } from "@/features/board/types/game";
 import { evaluateHeuristic } from "./heuristicSearch";
 import { GameMode } from "@/types/gameMode";
@@ -6,9 +6,9 @@ import { evaluateBFS } from "./bfs";
 import { evaluateDFS } from "./dfs";
 import { BOARD_CELL_COUNT } from "@/features/board/gameRules";
 
-export const getAiMove = (state: GameState, option: GameModeValue): Move => {
+export const getAiMove = (state: GameState, algorithm: AiModeValue): Move => {
     let encoded: number | null;
-    switch (option) {
+    switch (algorithm) {
         case GameMode.BLIND_DFS_AI:
             encoded = evaluateDFS(state, 5);
             break;
@@ -16,7 +16,6 @@ export const getAiMove = (state: GameState, option: GameModeValue): Move => {
             encoded = evaluateBFS(state, 5);
             break;
         case GameMode.HEURISTIC_AI:
-        case GameMode.AIVAI:
             encoded = evaluateHeuristic(state);
             break;
         default:

@@ -1,6 +1,10 @@
 import type { CellPosition } from "../types/board";
 import type { Player } from "../types/game";
-import { GameMode, type GameModeValue } from "@/types/gameMode";
+import {
+    GameMode,
+    type AiModeValue,
+    type GameModeValue,
+} from "@/types/gameMode";
 import {
     applyMove,
     back as gameBack,
@@ -38,9 +42,14 @@ export const clearBoard = (): void => {
     startAiTurn(true);
 };
 
-export const startGame = (option: GameModeValue, humanPlayer: Player): void => {
+export const startGame = (
+    option: GameModeValue,
+    humanPlayer: Player,
+    aiPlayers?: readonly [AiModeValue, AiModeValue],
+): void => {
     store.option = option;
     store.humanPlayer = humanPlayer;
+    if (aiPlayers) store.aiPlayers = [...aiPlayers];
     optionListeners.forEach((listener) => listener());
     clearBoard();
 };

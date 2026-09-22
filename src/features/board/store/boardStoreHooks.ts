@@ -61,11 +61,19 @@ export const useGameConfigStore = () => {
         },
         () => store.humanPlayer,
     );
+    const aiPlayers = useSyncExternalStore(
+        (listener) => {
+            optionListeners.add(listener);
+            return () => optionListeners.delete(listener);
+        },
+        () => store.aiPlayers,
+    );
 
     return {
         mode,
         setMode,
         humanPlayer,
+        aiPlayers,
         setHumanPlayer,
         startGame,
         leaveGame,

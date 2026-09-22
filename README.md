@@ -19,13 +19,13 @@ The cell index chosen within a local board determines which local board the oppo
 
 ## Game Modes
 
-| Mode in Game    | Description                                                       |
-| --------------- | ----------------------------------------------------------------- |
-| Player          | Two players alternating turns locally                             |
-| The Heuristic   | Play against a Minimax AI with heuristic evaluation               |
-| The Blind (DFS) | Play against an AI using Depth-First Search with depth 5          |
-| The Blind (BFS) | Play against an AI using Breadth-First Search with depth 5        |
-| AI vs AI        | Watch two Heuristic AIs compete with a 500 ms delay between turns |
+| Mode in Game    | Description                                                |
+| --------------- | ---------------------------------------------------------- |
+| Player          | Two players alternating turns locally                      |
+| The Heuristic   | Play against a Minimax AI with heuristic evaluation        |
+| The Blind (DFS) | Play against an AI using Depth-First Search with depth 5   |
+| The Blind (BFS) | Play against an AI using Breadth-First Search with depth 5 |
+| AI vs AI        | Pick any AI engine for X and O and watch them compete      |
 
 ## Heuristic AI
 

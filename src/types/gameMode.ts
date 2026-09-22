@@ -8,6 +8,45 @@ export const GameMode = {
 
 export type GameModeValue = (typeof GameMode)[keyof typeof GameMode];
 
+export type AiModeValue =
+    | typeof GameMode.HEURISTIC_AI
+    | typeof GameMode.BLIND_DFS_AI
+    | typeof GameMode.BLIND_BFS_AI;
+
+export const aiModeOptions = [
+    {
+        value: GameMode.HEURISTIC_AI,
+        label: "The Heuristic",
+        shortLabel: "Heuristic",
+        badge: "Strategic",
+        description: "Scores the board and plans ahead with Minimax.",
+        glyph: "✦",
+    },
+    {
+        value: GameMode.BLIND_DFS_AI,
+        label: "The Blind (DFS)",
+        shortLabel: "Blind DFS",
+        badge: "Deep search",
+        description: "Follows one branch deeply before trying another.",
+        glyph: "↘",
+    },
+    {
+        value: GameMode.BLIND_BFS_AI,
+        label: "The Blind (BFS)",
+        shortLabel: "Blind BFS",
+        badge: "Wide search",
+        description: "Explores every nearby possibility layer by layer.",
+        glyph: "≋",
+    },
+] satisfies readonly {
+    value: AiModeValue;
+    label: string;
+    shortLabel: string;
+    badge: string;
+    description: string;
+    glyph: string;
+}[];
+
 export const gameModeOptions = [
     {
         value: GameMode.PVP,
@@ -33,6 +72,9 @@ export const gameModeOptions = [
     value: GameModeValue;
     label: string;
 }[];
+
+export const getAiModeOption = (value: AiModeValue) =>
+    aiModeOptions.find((option) => option.value === value) ?? aiModeOptions[0];
 
 export const parseGameMode = (value: string): GameModeValue => {
     const mode = Number(value);
