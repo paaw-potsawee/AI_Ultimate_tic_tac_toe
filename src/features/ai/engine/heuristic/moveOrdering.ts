@@ -37,19 +37,31 @@ export const getOrderedMoves = (
     state: GameState,
     legalMoves: number[],
     preferredMove: number | null = null,
+    checkDeadline?: () => void,
 ): OrderedMove[] => {
-    const orderedMoves = legalMoves.map((move) => {
+    const orderedMoves: OrderedMove[] = [];
+
+    for (let index = 0; index < legalMoves.length; index += 1) {
+        if ((index & 15) === 0) checkDeadline?.();
+
+        const move = legalMoves[index];
         const boardIndex = Math.floor(move / BOARD_CELL_COUNT);
         const cellIndex = move % BOARD_CELL_COUNT;
         const nextState = applyMove(state, state.player, boardIndex, cellIndex);
 
-        return {
+        orderedMoves.push({
             move,
             state: nextState,
             priority: getMovePriority(state, nextState, move, preferredMove),
-        };
-    });
+        });
+    }
 
-    orderedMoves.sort((a, b) => b.priority - a.priority || a.move - b.move);
+    let comparisons = 0;
+    orderedMoves.sort((a, b) => {
+        if ((comparisons & 31) === 0) checkDeadline?.();
+        comparisons += 1;
+        return b.priority - a.priority || a.move - b.move;
+    });
+    checkDeadline?.();
     return orderedMoves;
 };

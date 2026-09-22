@@ -1,8 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getAvailableMoves, getUltimateBoard } from "@/features/board";
 import { evaluateHeuristic } from "@/features/ai/engine/heuristicSearch";
 
 describe("evaluateHeuristic", () => {
+    afterEach(() => vi.restoreAllMocks());
+
     it.each([
         { player: 0 as const, wonKey: "wonX" as const, boardKey: "x" as const },
         { player: 1 as const, wonKey: "wonO" as const, boardKey: "o" as const },
@@ -51,4 +53,36 @@ describe("evaluateHeuristic", () => {
             expect(durationMs).toBeLessThan(2_000);
         },
     );
+
+    it(
+        "avoids sending the opponent to an immediate macro win",
+        { timeout: 5_000 },
+        () => {
+            const state = getUltimateBoard();
+            state.player = 0;
+            state.nextBoard = 3;
+            state.wonO = (1 << 1) | (1 << 7);
+            state.o[1] = 0b000000111;
+            state.o[7] = 0b000000111;
+            state.o[4] = 0b000000011;
+
+            const move = evaluateHeuristic(state);
+
+            expect(move).not.toBeNull();
+            expect([1, 4, 7]).not.toContain((move as number) % 9);
+        },
+    );
+
+    it("returns its legal fallback when the deadline is already exhausted", () => {
+        let callCount = 0;
+        vi.spyOn(performance, "now").mockImplementation(() =>
+            callCount++ === 0 ? 0 : 901,
+        );
+        const state = getUltimateBoard();
+        const legalMoves = getAvailableMoves(state);
+
+        const move = evaluateHeuristic(state);
+
+        expect(legalMoves).toContain(move);
+    });
 });

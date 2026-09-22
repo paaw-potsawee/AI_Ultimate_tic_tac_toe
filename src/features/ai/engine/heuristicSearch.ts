@@ -4,43 +4,27 @@ import {
     MAX_DEPTH,
     SEARCH_TIMEOUT,
     TIME_BUDGET_MS,
-    TRANSPOSITION_TABLE_LIMIT,
     WIN_SCORE,
 } from "./heuristic/constants";
 import { calculateScore, getTerminalScore } from "./heuristic/evaluation";
 import { getOrderedMoves } from "./heuristic/moveOrdering";
+import { BoundedTranspositionTable } from "./heuristic/transpositionTable";
 import type {
     SearchContext,
     SearchResult,
-    TranspositionEntry,
     TranspositionFlag,
 } from "./heuristic/types";
-import { getZobristHash } from "./heuristic/zobrist";
+import { getZobristKey } from "./heuristic/zobrist";
 
-const checkDeadline = (context: SearchContext, force = false): void => {
-    context.nodes += 1;
-    // Checking every 64 nodes amortizes performance.now() call overhead.
-    if (
-        (force || (context.nodes & 63) === 0) &&
-        performance.now() >= context.deadline
-    ) {
-        throw SEARCH_TIMEOUT;
-    }
+const enforceDeadline = (context: SearchContext): void => {
+    if (performance.now() >= context.deadline) throw SEARCH_TIMEOUT;
 };
 
-const storeTransposition = (
-    context: SearchContext,
-    key: number,
-    entry: TranspositionEntry,
-): void => {
-    const existing = context.table.get(key);
-    if (
-        !existing ||
-        entry.depth >= existing.depth ||
-        context.table.size < TRANSPOSITION_TABLE_LIMIT
-    ) {
-        context.table.set(key, entry);
-    }
+const visitNode = (context: SearchContext): void => {
+    context.nodes += 1;
+    // Checking every 32 nodes keeps the deadline tight without paying for a
+    // performance.now() call at every node.
+    if ((context.nodes & 31) === 0) enforceDeadline(context);
 };
 
 const minimax = (
@@ -50,13 +34,13 @@ const minimax = (
     beta: number,
     context: SearchContext,
 ): number => {
-    checkDeadline(context);
+    visitNode(context);
 
     const terminalScore = getTerminalScore(checkGameWinner(state), depth);
     if (terminalScore !== null) return terminalScore;
     if (depth === 0) return calculateScore(state);
 
-    const key = getZobristHash(state);
+    const key = getZobristKey(state);
     const cached = context.table.get(key);
     const originalAlpha = alpha;
     const originalBeta = beta;
@@ -79,6 +63,7 @@ const minimax = (
         state,
         legalMoves,
         cached?.bestMove ?? null,
+        () => enforceDeadline(context),
     );
     const isMaximizing = state.player === 1;
     let bestValue = isMaximizing ? -Infinity : Infinity;
@@ -105,7 +90,7 @@ const minimax = (
     if (bestValue <= originalAlpha) flag = "UPPER";
     else if (bestValue >= originalBeta) flag = "LOWER";
 
-    storeTransposition(context, key, {
+    context.table.set(key, {
         value: bestValue,
         flag,
         bestMove,
@@ -122,14 +107,16 @@ const searchAtDepth = (
     context: SearchContext,
 ): SearchResult => {
     const isMaximizing = state.player === 1;
-    const orderedMoves = getOrderedMoves(state, legalMoves, preferredMove);
+    const orderedMoves = getOrderedMoves(state, legalMoves, preferredMove, () =>
+        enforceDeadline(context),
+    );
     let bestMove = orderedMoves[0].move;
     let bestValue = isMaximizing ? -Infinity : Infinity;
     let alpha = -Infinity;
     let beta = Infinity;
 
     for (const candidate of orderedMoves) {
-        checkDeadline(context, true);
+        enforceDeadline(context);
         const value = minimax(candidate.state, depth - 1, alpha, beta, context);
 
         if (isMaximizing ? value > bestValue : value < bestValue) {
@@ -156,7 +143,7 @@ export const evaluateHeuristic = (state: GameState): number | null => {
     const context: SearchContext = {
         deadline,
         nodes: 0,
-        table: new Map(),
+        table: new BoundedTranspositionTable(),
     };
     let bestMove = fallbackMove;
     let preferredMove: number | null = null;
