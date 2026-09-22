@@ -12,6 +12,12 @@ const mulberry32 = (seed: number): (() => number) => {
 };
 
 const _rng = mulberry32(0xdeadbeef);
+const _verificationRng = mulberry32(0x9e3779b9);
+
+export interface ZobristKey {
+    primary: number;
+    verification: number;
+}
 
 export const ZOBRIST_X: number[][] = Array.from({ length: 9 }, () =>
     Array.from({ length: 9 }, _rng),
@@ -29,23 +35,73 @@ export const ZOBRIST_NEXT_BOARD: number[] = Array.from({ length: 10 }, _rng);
 
 export const ZOBRIST_PLAYER: [number, number] = [_rng(), _rng()];
 
-export const getZobristHash = (state: GameState): number => {
-    let h = ZOBRIST_PLAYER[state.player] ^ ZOBRIST_NEXT_BOARD[state.nextBoard];
+const ZOBRIST_VERIFICATION_X: number[][] = Array.from({ length: 9 }, () =>
+    Array.from({ length: 9 }, _verificationRng),
+);
+
+const ZOBRIST_VERIFICATION_O: number[][] = Array.from({ length: 9 }, () =>
+    Array.from({ length: 9 }, _verificationRng),
+);
+
+const ZOBRIST_VERIFICATION_WON_X: number[] = Array.from(
+    { length: 9 },
+    _verificationRng,
+);
+
+const ZOBRIST_VERIFICATION_WON_O: number[] = Array.from(
+    { length: 9 },
+    _verificationRng,
+);
+
+const ZOBRIST_VERIFICATION_NEXT_BOARD: number[] = Array.from(
+    { length: 10 },
+    _verificationRng,
+);
+
+const ZOBRIST_VERIFICATION_PLAYER: [number, number] = [
+    _verificationRng(),
+    _verificationRng(),
+];
+
+export const getZobristKey = (state: GameState): ZobristKey => {
+    let primary =
+        ZOBRIST_PLAYER[state.player] ^ ZOBRIST_NEXT_BOARD[state.nextBoard];
+    let verification =
+        ZOBRIST_VERIFICATION_PLAYER[state.player] ^
+        ZOBRIST_VERIFICATION_NEXT_BOARD[state.nextBoard];
 
     for (let board = 0; board < 9; board++) {
         let xBits = state.x[board];
         let oBits = state.o[board];
 
         for (let cell = 0; cell < 9; cell++) {
-            if (xBits & 1) h ^= ZOBRIST_X[board][cell];
-            if (oBits & 1) h ^= ZOBRIST_O[board][cell];
+            if (xBits & 1) {
+                primary ^= ZOBRIST_X[board][cell];
+                verification ^= ZOBRIST_VERIFICATION_X[board][cell];
+            }
+            if (oBits & 1) {
+                primary ^= ZOBRIST_O[board][cell];
+                verification ^= ZOBRIST_VERIFICATION_O[board][cell];
+            }
             xBits >>= 1;
             oBits >>= 1;
         }
 
-        if ((state.wonX >> board) & 1) h ^= ZOBRIST_WON_X[board];
-        if ((state.wonO >> board) & 1) h ^= ZOBRIST_WON_O[board];
+        if ((state.wonX >> board) & 1) {
+            primary ^= ZOBRIST_WON_X[board];
+            verification ^= ZOBRIST_VERIFICATION_WON_X[board];
+        }
+        if ((state.wonO >> board) & 1) {
+            primary ^= ZOBRIST_WON_O[board];
+            verification ^= ZOBRIST_VERIFICATION_WON_O[board];
+        }
     }
 
-    return h >>> 0;
+    return {
+        primary: primary >>> 0,
+        verification: verification >>> 0,
+    };
 };
+
+export const getZobristHash = (state: GameState): number =>
+    getZobristKey(state).primary;

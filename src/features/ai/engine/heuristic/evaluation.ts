@@ -3,12 +3,14 @@ import {
     BOARD_CELL_COUNT,
     FREE_CHOICE_BOARD,
     FULL_BOARD_MASK,
+    isLocalBoardClosed,
     isLocalBoardFull,
     WIN_MASKS,
 } from "@/features/board/gameRules";
 import {
     CAPTURED_BOARD_SCORE,
     FREE_MOVE_SCORE,
+    FORCED_BOARD_SCORE_MULTIPLIER,
     LOCAL_ONE_IN_LINE_SCORE,
     LOCAL_TWO_IN_LINE_SCORE,
     MACRO_ONE_IN_LINE_SCORE,
@@ -114,6 +116,10 @@ export const calculateScore = (state: GameState): number => {
 
     if (state.nextBoard === FREE_CHOICE_BOARD) {
         score += state.player === 1 ? FREE_MOVE_SCORE : -FREE_MOVE_SCORE;
+    } else if (!isLocalBoardClosed(state, state.nextBoard)) {
+        score +=
+            calculateLocalBoardScore(state, state.nextBoard) *
+            FORCED_BOARD_SCORE_MULTIPLIER;
     }
 
     return score;

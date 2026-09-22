@@ -17,3 +17,4 @@ export const LOCAL_TWO_IN_LINE_SCORE = 200;
 export const POSITION_SCORE = 2;
 
 export const FREE_MOVE_SCORE = 300;
+export const FORCED_BOARD_SCORE_MULTIPLIER = 1;

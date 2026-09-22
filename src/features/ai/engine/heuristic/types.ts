@@ -1,4 +1,5 @@
 import type { GameState } from "@/features/board/types/game";
+import type { ZobristKey } from "./zobrist";
 
 export type TranspositionFlag = "EXACT" | "LOWER" | "UPPER";
 
@@ -12,7 +13,12 @@ export interface TranspositionEntry {
 export interface SearchContext {
     deadline: number;
     nodes: number;
-    table: Map<number, TranspositionEntry>;
+    table: TranspositionTable;
+}
+
+export interface TranspositionTable {
+    get: (key: ZobristKey) => TranspositionEntry | undefined;
+    set: (key: ZobristKey, entry: TranspositionEntry) => void;
 }
 
 export interface OrderedMove {
