@@ -3,7 +3,7 @@ import { getUltimateBoard } from "@/features/board";
 import {
     getZobristHash,
     getZobristKey,
-} from "@/features/ai/engine/heuristic/zobrist";
+} from "@/features/ai/engine/shared/zobrist";
 
 describe("Zobrist keys", () => {
     it("is deterministic and keeps the primary hash API compatible", () => {

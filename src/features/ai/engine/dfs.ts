@@ -6,11 +6,12 @@ import {
 } from "@/features/board/game";
 import { BOARD_CELL_COUNT } from "@/features/board/gameRules";
 import type { SearchContext } from "./shared/types";
-import { checkDeadline } from "./shared/utils";
+import { visitNode } from "./shared/utils";
 import { SEARCH_TIMEOUT } from "./shared/constants";
 // borrow constant / scoring system from heuristic search for leaf in blind search
 import { WIN_SCORE } from "./heuristic/constants";
 import { calculateScore } from "./heuristic/evaluation";
+import { BoundedTranspositionTable } from "./shared/transpositionTable";
 
 const TIME_BUDGET_MS = 1000;
 
@@ -37,7 +38,7 @@ const dfs = (
     depth: number,
     context: SearchContext,
 ): number => {
-    checkDeadline(context);
+    visitNode(context);
     // only calculate score when hit terminal state (leaf or depth limit)
     // borrow scoring system from heuristic search to help evaluate this state
     const winner = checkGameWinner(state);
@@ -79,6 +80,7 @@ export const evaluateDFS = (state: GameState, depth: number): number | null => {
     const context: SearchContext = {
         deadline,
         nodes: 0,
+        table: new BoundedTranspositionTable(),
     };
     console.log(depth);
     for (let i = 0; i < depth; i++) {
