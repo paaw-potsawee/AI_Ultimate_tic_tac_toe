@@ -2,11 +2,11 @@ import { getAiMove } from "../engine/ai";
 import type { WorkerRequest, WorkerResponse } from "../types/aiWorker";
 
 addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
-    const { state, option, epoch } = event.data;
+    const { state, algorithm, epoch } = event.data;
     const start = performance.now();
 
     try {
-        const move = getAiMove(state, option);
+        const move = getAiMove(state, algorithm);
         const durationMs = performance.now() - start;
 
         const response: WorkerResponse = {

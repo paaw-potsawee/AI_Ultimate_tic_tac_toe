@@ -9,14 +9,14 @@ import {
 } from "@/features/board";
 import { useAiWorker } from "@/features/ai";
 import { Header } from "@/components/header";
-import { SelectMode, SelectSide } from "@/components/setup";
+import { SelectAiMatch, SelectMode, SelectSide } from "@/components/setup";
 import { GameMode, type GameModeValue } from "@/types/gameMode";
 
 function App() {
     // Manages the AI Web Worker lifecycle and wires it to the board store.
     useAiWorker();
     const [screen, setScreen] = useState<
-        "select-mode" | "select-side" | "board"
+        "select-mode" | "select-side" | "select-ai" | "board"
     >("select-mode");
     const { startGame } = useGameConfigStore();
     const [draftMode, setDraftMode] = useState<GameModeValue>(GameMode.PVP);
@@ -28,12 +28,11 @@ function App() {
                 <SelectMode
                     onNext={(selectedMode) => {
                         setDraftMode(selectedMode);
-                        if (
-                            selectedMode === GameMode.PVP ||
-                            selectedMode === GameMode.AIVAI
-                        ) {
+                        if (selectedMode === GameMode.PVP) {
                             startGame(selectedMode, 0);
                             setScreen("board");
+                        } else if (selectedMode === GameMode.AIVAI) {
+                            setScreen("select-ai");
                         } else {
                             setScreen("select-side");
                         }
@@ -44,6 +43,15 @@ function App() {
                 <SelectSide
                     onStartGame={(side) => {
                         startGame(draftMode, side);
+                        setScreen("board");
+                    }}
+                />
+            )}
+            {screen === "select-ai" && (
+                <SelectAiMatch
+                    onBack={() => setScreen("select-mode")}
+                    onStartGame={(xAi, oAi) => {
+                        startGame(GameMode.AIVAI, 0, [xAi, oAi]);
                         setScreen("board");
                     }}
                 />

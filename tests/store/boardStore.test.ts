@@ -58,6 +58,7 @@ describe("BoardStore AI worker lifecycle", () => {
 
     afterEach(() => {
         cleanup();
+        vi.useRealTimers();
         vi.restoreAllMocks();
         vi.unstubAllGlobals();
     });
@@ -155,5 +156,38 @@ describe("BoardStore AI worker lifecycle", () => {
         expect(console.error).toHaveBeenCalledWith(
             "AI worker crashed unexpectedly",
         );
+    });
+
+    it("uses the selected AI algorithm for each AI vs AI player", async () => {
+        vi.useFakeTimers();
+        const hook = await renderStore();
+
+        act(() =>
+            hook.result.current.config.startGame(GameMode.AIVAI, 0, [
+                GameMode.BLIND_DFS_AI,
+                GameMode.BLIND_BFS_AI,
+            ]),
+        );
+        act(() => vi.advanceTimersByTime(500));
+
+        const worker = MockWorker.instances[0];
+        const firstRequest = worker.postMessage.mock
+            .calls[0][0] as WorkerRequest;
+        expect(firstRequest.algorithm).toBe(GameMode.BLIND_DFS_AI);
+
+        act(() =>
+            worker.emitMessage({
+                ok: true,
+                board: 4,
+                cell: 4,
+                epoch: firstRequest.epoch,
+                durationMs: 10,
+            }),
+        );
+        act(() => vi.advanceTimersByTime(500));
+
+        const secondRequest = worker.postMessage.mock
+            .calls[1][0] as WorkerRequest;
+        expect(secondRequest.algorithm).toBe(GameMode.BLIND_BFS_AI);
     });
 });

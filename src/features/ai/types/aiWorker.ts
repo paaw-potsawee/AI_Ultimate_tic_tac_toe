@@ -1,9 +1,9 @@
 import type { GameState } from "@/features/board/types/game";
-import type { GameModeValue } from "@/types/gameMode";
+import type { AiModeValue } from "@/types/gameMode";
 
 export interface WorkerRequest {
     state: GameState;
-    option: GameModeValue;
+    algorithm: AiModeValue;
     epoch: number;
 }
 

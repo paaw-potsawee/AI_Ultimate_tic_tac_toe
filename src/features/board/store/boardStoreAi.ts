@@ -1,5 +1,5 @@
 import type { WorkerRequest } from "../../ai/types/aiWorker";
-import { GameMode } from "@/types/gameMode";
+import { GameMode, type AiModeValue } from "@/types/gameMode";
 import { applyMove, checkGameWinner } from "../game";
 import { emit, refreshSnapshots, store } from "./boardStoreState";
 
@@ -38,11 +38,16 @@ export const doAiMove = (): void => {
         return;
     }
 
+    const algorithm: AiModeValue =
+        store.option === GameMode.AIVAI
+            ? store.aiPlayers[store.currentPlayer]
+            : store.option;
+
     store.isAiTurn = true;
     emit();
     triggerMove({
         state: store.state,
-        option: store.option,
+        algorithm,
         epoch: aiEpoch,
     });
 };
