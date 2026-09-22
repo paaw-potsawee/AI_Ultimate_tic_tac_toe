@@ -47,7 +47,7 @@ export const getOrderedMoves = (
         const move = legalMoves[index];
         const boardIndex = Math.floor(move / BOARD_CELL_COUNT);
         const cellIndex = move % BOARD_CELL_COUNT;
-        const nextState = applyMove(state, state.player, boardIndex, cellIndex);
+        const nextState = applyMove(state, boardIndex, cellIndex);
 
         orderedMoves.push({
             move,

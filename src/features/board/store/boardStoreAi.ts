@@ -84,7 +84,7 @@ export const notifyAiMoveResult = (
 
     console.log(`AI move took ${durationMs.toFixed(1)} milliseconds`);
 
-    const nextState = applyMove(store.state, store.currentPlayer, board, cell);
+    const nextState = applyMove(store.state, board, cell);
 
     store.history = [
         ...store.history,

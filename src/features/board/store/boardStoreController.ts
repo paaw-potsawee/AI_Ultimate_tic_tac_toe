@@ -78,7 +78,7 @@ export const handleCellClick = ({
 
     const board = localRow * 3 + localCol;
     const cell = cellRow * 3 + cellCol;
-    const nextState = applyMove(store.state, store.currentPlayer, board, cell);
+    const nextState = applyMove(store.state, board, cell);
 
     store.history = [
         ...store.history,

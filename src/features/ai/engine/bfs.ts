@@ -23,7 +23,7 @@ export const evaluateBFS = (state: GameState, depth: number): number | null => {
     for (let i = 0; i < availableMoves.length; i++) {
         const boardIdx = Math.floor(availableMoves[i] / BOARD_CELL_COUNT);
         const cellIdx = availableMoves[i] % BOARD_CELL_COUNT;
-        const newState = applyMove(state, state.player, boardIdx, cellIdx);
+        const newState = applyMove(state, boardIdx, cellIdx);
         queue.enqueue({ state: newState, move: availableMoves[i], depth: 1 });
         nodesExplored++;
     }
@@ -64,12 +64,7 @@ export const evaluateBFS = (state: GameState, depth: number): number | null => {
         for (let i = 0; i < availableMoves.length; i++) {
             const boardIdx = Math.floor(availableMoves[i] / BOARD_CELL_COUNT);
             const cellIdx = availableMoves[i] % BOARD_CELL_COUNT;
-            const newState = applyMove(
-                currentState.state,
-                currentState.state.player,
-                boardIdx,
-                cellIdx,
-            );
+            const newState = applyMove(currentState.state, boardIdx, cellIdx);
             queue.enqueue({
                 state: newState,
                 move: availableMoves[i],

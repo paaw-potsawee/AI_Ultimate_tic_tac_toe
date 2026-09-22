@@ -1,5 +1,5 @@
 import type { CellPosition, RenderBoard } from "./types/board";
-import type { GameState, Move, Player, GameResult } from "./types/game";
+import type { GameState, Move, GameResult } from "./types/game";
 import type { GameWinLine, WinLineType } from "./types/winLine";
 import {
     areAllLocalBoardsClosed,
@@ -205,12 +205,12 @@ export const getAvailableLocalBoards = (
 
 export const applyMove = (
     state: GameState,
-    player: Player,
     boardIndex: number,
     cellIndex: number,
 ): GameState => {
     const nextState = cloneUltimateBoard(state);
     const bit = 1 << cellIndex;
+    const player = state.player;
 
     if (player === 0) {
         nextState.x[boardIndex] |= bit;

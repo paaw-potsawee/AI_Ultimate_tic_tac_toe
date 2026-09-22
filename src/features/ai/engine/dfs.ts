@@ -1,61 +1,117 @@
-import type { GameState } from "@/features/board/types/game";
+import type { GameState, Player } from "@/features/board/types/game";
 import {
     getAvailableMoves,
     checkGameWinner,
     applyMove,
 } from "@/features/board/game";
 import { BOARD_CELL_COUNT } from "@/features/board/gameRules";
+import type { SearchContext } from "./shared/types";
+import { checkDeadline } from "./shared/utils";
+import { SEARCH_TIMEOUT } from "./shared/constants";
+// borrow constant / scoring system from heuristic search for leaf in blind search
+import { WIN_SCORE } from "./heuristic/constants";
+import { calculateScore } from "./heuristic/evaluation";
 
-let nodesExplored = 0;
+const TIME_BUDGET_MS = 1000;
 
-const dfs = (state: GameState, depth: number = 5): number => {
+const minimaxScore = (
+    player: Player,
+    currentBest: number,
+    score: number,
+): number => {
+    if (player === 0) return Math.max(currentBest, score);
+    return Math.min(currentBest, score);
+};
+
+const minimaxComp = (
+    player: Player,
+    currentBest: number,
+    score: number,
+): boolean => {
+    if (player === 0) return score > currentBest;
+    return score < currentBest;
+};
+
+const dfs = (
+    state: GameState,
+    depth: number,
+    context: SearchContext,
+): number => {
+    checkDeadline(context);
+    // only calculate score when hit terminal state (leaf or depth limit)
+    // borrow scoring system from heuristic search to help evaluate this state
     const winner = checkGameWinner(state);
-    if (depth === 0 || winner !== null) {
-        return winner === state.player ? 1 : winner !== null ? -1 : 0;
+    if (winner !== null) {
+        // score is zero when draw
+        console.log(`found terminal state ${winner}`);
+        if (winner === -1) return 0;
+        return winner === 0 ? WIN_SCORE : -WIN_SCORE;
     }
-    let bestScore = -Infinity;
-    const availableMoves = getAvailableMoves(state);
-    for (let i = 0; i < availableMoves.length; i++) {
-        nodesExplored++;
-        const val = dfs(
-            applyMove(
-                state,
-                state.player,
-                Math.floor(availableMoves[i] / BOARD_CELL_COUNT),
-                availableMoves[i] % BOARD_CELL_COUNT,
-            ),
-            depth - 1,
-        );
-        bestScore = Math.max(bestScore, val);
+    // non leaf node but hit depth limit
+    if (depth === 0) {
+        return -calculateScore(state);
     }
+
+    const moves = getAvailableMoves(state);
+    let bestScore = state.player === 0 ? -Infinity : Infinity;
+    // fall back in no moves left return a draw score
+    if (moves.length === 0) return 0;
+    moves.forEach((move) => {
+        // simulate play by apply next move
+        const boardIdx = Math.floor(move / BOARD_CELL_COUNT);
+        const cellIdx = move % BOARD_CELL_COUNT;
+        const nextState = applyMove(state, boardIdx, cellIdx);
+        const currentScore = dfs(nextState, depth - 1, context);
+        bestScore = minimaxScore(state.player, bestScore, currentScore);
+    });
 
     return bestScore;
 };
 
 export const evaluateDFS = (state: GameState, depth: number): number | null => {
-    nodesExplored = 0;
     const availableMoves = getAvailableMoves(state);
     if (availableMoves.length === 0) {
         return null;
     }
-    for (let i = 0; i < availableMoves.length; i++) {
-        const boardIdx = Math.floor(availableMoves[i] / BOARD_CELL_COUNT);
-        const cellIdx = availableMoves[i] % BOARD_CELL_COUNT;
 
-        console.log(`Exploring move: Board ${boardIdx}, Cell ${cellIdx}`);
-        const newState = applyMove(state, state.player, boardIdx, cellIdx);
-
-        // call dfs
-        const score = dfs(newState, depth - 1);
-        console.log(
-            `Move: Board ${boardIdx}, Cell ${cellIdx}, Score: ${score}, Total Nodes Explored: ${nodesExplored}`,
-        );
-
-        // accept first move that doesn't lead to a loss
-        if (score > 0) {
-            return availableMoves[i];
+    let bestMove: number | null = null;
+    const deadline = performance.now() + TIME_BUDGET_MS;
+    const context: SearchContext = {
+        deadline,
+        nodes: 0,
+    };
+    console.log(depth);
+    for (let i = 0; i < depth; i++) {
+        console.log(`start ${i}`);
+        if (performance.now() >= context.deadline) break;
+        let bestScore = state.player === 0 ? -Infinity : Infinity;
+        let bestLocalMove: number | null = null;
+        try {
+            for (const move of availableMoves) {
+                const boardIdx = Math.floor(move / BOARD_CELL_COUNT);
+                const cellIdx = move % BOARD_CELL_COUNT;
+                const nextState = applyMove(state, boardIdx, cellIdx);
+                const score = dfs(nextState, i, context);
+                if (minimaxComp(state.player, bestScore, score)) {
+                    bestLocalMove = move;
+                }
+                if (
+                    (state.player === 0 && score >= WIN_SCORE) ||
+                    (state.player === 1 && score <= -WIN_SCORE)
+                )
+                    return bestLocalMove;
+                bestScore = minimaxScore(state.player, bestScore, score);
+            }
+            console.log(`Current iteration ${i} score ${bestScore}`);
+        } catch (error) {
+            console.log("search time out bla bla");
+            if (error !== SEARCH_TIMEOUT) throw error;
+            break;
         }
+        // assume that deeper search always get better result
+        bestMove = bestLocalMove;
+        console.log(`end ${i}`);
     }
     // fallback to first move if all moves lead to a loss
-    return availableMoves[0];
+    return bestMove ?? availableMoves[0];
 };
