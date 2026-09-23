@@ -6,18 +6,18 @@ interface Props {
 
 const SelectMode = ({ onNext }: Props) => {
     return (
-        <main className="flex w-full flex-1 flex-col gap-0 bg-teal md:flex-row">
+        <main className="flex w-full flex-1 flex-col bg-teal md:flex-row">
             <div
-                className="relative flex w-full shrink-0 flex-col items-center justify-between border-b-[5px] border-black bg-peach py-8 md:w-105 md:border-r-[5px] md:border-b-0 md:py-12"
+                className="relative flex w-full shrink-0 flex-col items-center justify-between border-b-[5px] border-black bg-peach px-3 py-7 md:w-[min(41vw,26.25rem)] md:border-r-[5px] md:border-b-0 md:px-2 md:py-10 lg:py-12"
                 style={{
                     backgroundImage:
                         "radial-gradient(circle, #ffffff 1.5px, transparent 1.5px)",
                     backgroundSize: "16px 16px",
                 }}
             >
-                <div className="mb-6 flex w-full justify-center md:mb-10">
+                <div className="mb-5 flex w-full justify-center sm:mb-6 md:mb-8 lg:mb-10">
                     <span
-                        className="block text-center font-sans text-5xl leading-tight font-extrabold tracking-tight italic filter-[drop-shadow(0px_2px_0px_#000000)_drop-shadow(0px_-1px_0px_#000000)_drop-shadow(1.5px_0px_0px_#000000)_drop-shadow(-1.5px_0px_0px_#000000)] sm:text-6xl md:text-[80px] md:leading-24.25"
+                        className="block max-w-full text-center font-sans text-5xl leading-tight font-extrabold tracking-tight italic filter-[drop-shadow(0px_2px_0px_#000000)_drop-shadow(0px_-1px_0px_#000000)_drop-shadow(1.5px_0px_0px_#000000)_drop-shadow(-1.5px_0px_0px_#000000)] sm:text-6xl md:text-[clamp(3.5rem,7.5vw,5rem)] md:leading-tight"
                         style={{
                             background:
                                 "linear-gradient(135.11deg, #EFBF04 25.65%, #896D02 74.35%)",
@@ -30,20 +30,20 @@ const SelectMode = ({ onNext }: Props) => {
                 </div>
 
                 {/* Tic Tac Toe */}
-                <div className="flex w-full flex-col text-center font-sans text-6xl leading-[0.88] font-extrabold tracking-tight text-black italic sm:text-7xl md:text-[130px] md:leading-47.5 lg:text-[160px] xl:text-[180px]">
+                <div className="flex w-full flex-col text-center font-sans text-6xl leading-[0.88] font-extrabold tracking-tight text-black italic sm:text-7xl md:text-[clamp(6rem,14vw,11.25rem)] md:leading-[0.9]">
                     <span>Tic</span>
                     <span>Tac</span>
                     <span>Toe</span>
                 </div>
             </div>
 
-            <div className="flex flex-1 flex-col items-center justify-center gap-5 py-10 pl-0 sm:gap-6 md:items-start md:gap-8">
+            <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-8 sm:gap-5 sm:py-10 md:items-start md:gap-6 md:px-0 lg:gap-8">
                 {gameModeOptions.map(({ value, label }) => (
                     <button
                         key={value}
                         type="button"
                         onClick={() => onNext(value)}
-                        className="flex items-center justify-center border-4 border-black bg-orange px-6 text-center font-sans text-2xl leading-none font-medium text-sunset-600 italic shadow-md transition-all hover:brightness-114 sm:h-17.5 sm:px-8 sm:text-3xl md:w-fit md:rounded-r-2xl md:border-l-0 md:px-10 md:text-[40px]"
+                        className="flex min-h-14 w-full max-w-xl items-center justify-center border-4 border-black bg-orange px-3 py-3 text-center font-sans text-xl leading-tight font-medium text-sunset-600 italic shadow-md transition-all hover:brightness-114 sm:min-h-16 sm:px-6 sm:text-2xl md:max-w-[34rem] md:rounded-r-2xl md:border-l-0 md:px-8 md:text-3xl xl:text-[40px]"
                     >
                         {label}
                     </button>

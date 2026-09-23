@@ -15,21 +15,21 @@ const GameControls = ({ onBackToSetup }: Props) => {
     };
 
     return (
-        <div className="flex justify-between gap-2">
+        <div className="grid grid-cols-3 gap-2">
             <Button
-                className="border-0 bg-ocean-200 px-4 py-2 text-teal"
+                className="min-h-11 border-0 bg-ocean-200 px-2 py-2 text-sm font-bold text-teal sm:px-4 sm:text-base"
                 onClick={back}
             >
                 Undo
             </Button>
             <Button
-                className="border-0 bg-ocean-200 px-4 py-2 text-black"
+                className="min-h-11 border-0 bg-ocean-200 px-2 py-2 text-sm font-bold text-black sm:px-4 sm:text-base"
                 onClick={handleBackToSetup}
             >
                 MainMenu
             </Button>
             <Button
-                className="border-0 bg-ocean-200 px-4 py-2 text-sunset-900"
+                className="min-h-11 border-0 bg-ocean-200 px-2 py-2 text-sm font-bold text-sunset-900 sm:px-4 sm:text-base"
                 onClick={clearBoard}
             >
                 Reset

@@ -20,7 +20,7 @@ const LocalBoard = ({ localRow, localCol }: Props) => {
     return (
         <div
             className={cn(
-                "relative rounded-lg border-[3px] p-0.5 transition-colors",
+                "relative min-w-0 rounded-md border-2 p-0.5 transition-colors sm:rounded-lg sm:border-[3px]",
                 isAvailable ? "border-burgundy" : "border-transparent",
             )}
         >
