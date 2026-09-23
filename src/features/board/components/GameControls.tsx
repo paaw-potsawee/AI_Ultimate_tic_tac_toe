@@ -23,10 +23,10 @@ const GameControls = ({ onBackToSetup }: Props) => {
                 Undo
             </Button>
             <Button
-                className="min-h-11 border-0 bg-ocean-200 px-2 py-2 text-sm font-bold text-black sm:px-4 sm:text-base"
+                className="flex min-h-11 items-center justify-center border-0 bg-ocean-200 px-2 py-2 text-center text-sm font-bold text-black sm:px-4 sm:text-base"
                 onClick={handleBackToSetup}
             >
-                MainMenu
+                Main Menu
             </Button>
             <Button
                 className="min-h-11 border-0 bg-ocean-200 px-2 py-2 text-sm font-bold text-sunset-900 sm:px-4 sm:text-base"

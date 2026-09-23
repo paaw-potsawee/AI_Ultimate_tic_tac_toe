@@ -30,7 +30,7 @@ const SelectMode = ({ onNext }: Props) => {
                 </div>
 
                 {/* Tic Tac Toe */}
-                <div className="flex w-full flex-col text-center font-sans text-6xl leading-[0.88] font-extrabold tracking-tight text-black italic sm:text-7xl md:text-[clamp(6rem,14vw,11.25rem)] md:leading-[0.9]">
+                <div className="flex w-full flex-row justify-center md:flex-col text-center font-sans text-6xl leading-[0.88] font-extrabold tracking-tight text-black italic sm:text-7xl md:text-[clamp(6rem,14vw,11.25rem)] md:leading-[0.9] ">
                     <span>Tic</span>
                     <span>Tac</span>
                     <span>Toe</span>
