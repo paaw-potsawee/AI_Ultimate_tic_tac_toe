@@ -30,6 +30,8 @@ describe("GameStatus", () => {
         render(<GameStatus />);
 
         const status = screen.getByRole("status");
+        expect(status.className.split(" ")).toContain("h-24");
+        expect(status.className.split(" ")).not.toContain("min-h-20");
         expect(within(status).getByText("MOVE 1")).toBeTruthy();
         expect(within(status).getByText("X'S TURN")).toBeTruthy();
     });

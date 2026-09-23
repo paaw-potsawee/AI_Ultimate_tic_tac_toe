@@ -23,7 +23,7 @@ const GameStatus = () => {
             aria-live="polite"
             aria-atomic="true"
             className={cn(
-                "flex min-h-20 w-full shrink-0 items-stretch border-3 border-black font-bold text-black",
+                "flex h-24 w-full shrink-0 items-stretch border-3 border-black font-bold text-black",
                 winner === -1
                     ? "bg-ocean-200"
                     : isX
