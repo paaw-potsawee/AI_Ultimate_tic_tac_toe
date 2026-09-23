@@ -22,7 +22,7 @@ function App() {
     const [draftMode, setDraftMode] = useState<GameModeValue>(GameMode.PVP);
 
     return (
-        <div className="flex min-h-screen flex-col items-center">
+        <div className="flex min-h-dvh w-full flex-col items-center overflow-x-hidden">
             <Header />
             {screen === "select-mode" && (
                 <SelectMode
@@ -57,17 +57,17 @@ function App() {
                 />
             )}
             {screen === "board" && (
-                <div className="flex flex-col items-center gap-4 py-4 lg:flex-row lg:items-start lg:justify-center">
+                <main className="grid w-full max-w-6xl flex-1 items-start justify-items-center gap-3 px-2 py-3 sm:px-4 sm:py-4 lg:grid-cols-[minmax(0,40.75rem)_20rem] lg:justify-center lg:gap-4">
                     <UltimateBoard />
-                    <div className="flex w-full max-w-163 flex-col gap-2 p-2 lg:h-163 lg:w-80 lg:max-w-none">
+                    <aside className="flex w-full max-w-[40.75rem] min-w-0 flex-col gap-2 lg:h-[min(40.75rem,calc(100dvh-8.5rem))] lg:max-w-none">
                         <GameStatus />
                         <PlayerInfo />
                         <GameControls
                             onBackToSetup={() => setScreen("select-mode")}
                         />
                         <MoveHistory />
-                    </div>
-                </div>
+                    </aside>
+                </main>
             )}
         </div>
     );
