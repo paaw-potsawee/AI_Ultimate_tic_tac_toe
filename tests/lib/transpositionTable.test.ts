@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { BoundedTranspositionTable } from "@/features/ai/engine/heuristic/transpositionTable";
-import type { TranspositionEntry } from "@/features/ai/engine/heuristic/types";
-import type { ZobristKey } from "@/features/ai/engine/heuristic/zobrist";
+import { BoundedTranspositionTable } from "@/features/ai/engine/shared/transpositionTable";
+import type { TranspositionEntry } from "@/features/ai/engine/shared/types";
+import type { ZobristKey } from "@/features/ai/engine/shared/zobrist";
 
 const key = (primary: number, verification: number): ZobristKey => ({
     primary,

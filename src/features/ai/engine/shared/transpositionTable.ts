@@ -1,4 +1,4 @@
-import { TRANSPOSITION_TABLE_LIMIT } from "./constants";
+import { TRANSPOSITION_TABLE_LIMIT } from "../heuristic/constants";
 import type { TranspositionEntry, TranspositionTable } from "./types";
 import type { ZobristKey } from "./zobrist";
 

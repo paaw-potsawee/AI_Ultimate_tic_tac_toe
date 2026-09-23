@@ -1,31 +1,14 @@
 import type { GameState } from "@/features/board/types/game";
 import { checkGameWinner, getAvailableMoves } from "@/features/board/game";
-import {
-    MAX_DEPTH,
-    SEARCH_TIMEOUT,
-    TIME_BUDGET_MS,
-    WIN_SCORE,
-} from "./heuristic/constants";
+import { MAX_DEPTH, TIME_BUDGET_MS, WIN_SCORE } from "./heuristic/constants";
 import { calculateScore, getTerminalScore } from "./heuristic/evaluation";
 import { getOrderedMoves } from "./heuristic/moveOrdering";
-import { BoundedTranspositionTable } from "./heuristic/transpositionTable";
-import type {
-    SearchContext,
-    SearchResult,
-    TranspositionFlag,
-} from "./heuristic/types";
-import { getZobristKey } from "./heuristic/zobrist";
-
-const enforceDeadline = (context: SearchContext): void => {
-    if (performance.now() >= context.deadline) throw SEARCH_TIMEOUT;
-};
-
-const visitNode = (context: SearchContext): void => {
-    context.nodes += 1;
-    // Checking every 32 nodes keeps the deadline tight without paying for a
-    // performance.now() call at every node.
-    if ((context.nodes & 31) === 0) enforceDeadline(context);
-};
+import { BoundedTranspositionTable } from "./shared/transpositionTable";
+import type { SearchContext, TranspositionFlag } from "./shared/types";
+import type { SearchResult } from "./heuristic/types";
+import { getZobristKey } from "./shared/zobrist";
+import { SEARCH_TIMEOUT } from "./shared/constants";
+import { visitNode, enforceDeadline } from "./shared/utils";
 
 const minimax = (
     state: GameState,

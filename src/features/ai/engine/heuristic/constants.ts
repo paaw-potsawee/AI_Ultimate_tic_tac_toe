@@ -3,8 +3,6 @@ export const MAX_DEPTH = 10;
 export const TIME_BUDGET_MS = 900;
 export const TRANSPOSITION_TABLE_LIMIT = 100_000;
 
-export const SEARCH_TIMEOUT = Symbol("search-timeout");
-
 // Center cell (index 4) scores highest as it intersects the most winning lines.
 export const POSITION_WEIGHTS = [3, 2, 3, 2, 4, 2, 3, 2, 3] as const;
 
