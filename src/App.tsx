@@ -41,6 +41,7 @@ function App() {
             )}
             {screen === "select-side" && (
                 <SelectSide
+                    onBack={() => setScreen("select-mode")}
                     onStartGame={(side) => {
                         startGame(draftMode, side);
                         setScreen("board");
