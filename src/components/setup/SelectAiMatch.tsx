@@ -29,13 +29,13 @@ const PlayerSelector = ({ player, value, onChange }: PlayerSelectorProps) => {
     const styles = PLAYER_STYLES[player];
 
     return (
-        <fieldset className="relative min-w-0 rounded-2xl border-4 border-black bg-orange p-4 shadow-md sm:p-6">
+        <fieldset className="relative min-w-0 rounded-2xl border-4 border-black bg-orange p-4 shadow-md sm:p-5 lg:p-6">
             <legend className="sr-only">
                 Choose the AI for player {player}
             </legend>
-            <div className="mb-5 flex items-center justify-center gap-4">
+            <div className="mb-4 flex items-center justify-center gap-3 sm:mb-5 sm:gap-4">
                 <div
-                    className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-2 border-black text-3xl font-black italic ${styles.marker}`}
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-black text-2xl font-black italic sm:h-14 sm:w-14 sm:text-3xl ${styles.marker}`}
                     aria-hidden="true"
                 >
                     {player}
@@ -45,7 +45,7 @@ const PlayerSelector = ({ player, value, onChange }: PlayerSelectorProps) => {
                         Player {player}
                     </p>
                     <h2
-                        className={`text-2xl font-bold italic ${styles.accent}`}
+                        className={`text-xl font-bold italic sm:text-2xl ${styles.accent}`}
                     >
                         Choose an AI
                     </h2>
@@ -63,14 +63,14 @@ const PlayerSelector = ({ player, value, onChange }: PlayerSelectorProps) => {
                             aria-label={`Use ${option.shortLabel} for player ${player}`}
                             aria-pressed={isSelected}
                             onClick={() => onChange(option.value)}
-                            className={`group flex min-h-17 w-full items-center gap-3 rounded-2xl border-2 p-3 text-left transition-all duration-200 focus-visible:ring-4 focus-visible:ring-white/80 focus-visible:outline-none sm:px-4 ${
+                            className={`group flex min-h-16 w-full items-center gap-2 rounded-2xl border-2 p-2.5 text-left transition-all duration-200 focus-visible:ring-4 focus-visible:ring-white/80 focus-visible:outline-none sm:min-h-17 sm:gap-3 sm:px-3 lg:px-4 ${
                                 isSelected
                                     ? styles.selected
                                     : "border-black bg-peach hover:-translate-y-0.5 hover:brightness-105"
                             }`}
                         >
                             <span
-                                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-black text-2xl font-black transition-transform group-hover:rotate-3 ${
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-black text-xl font-black transition-transform group-hover:rotate-3 sm:h-11 sm:w-11 sm:text-2xl ${
                                     isSelected
                                         ? styles.marker
                                         : "bg-orange text-black"
@@ -79,7 +79,7 @@ const PlayerSelector = ({ player, value, onChange }: PlayerSelectorProps) => {
                             >
                                 {option.glyph}
                             </span>
-                            <span className="min-w-0 flex-1 text-lg font-bold text-black italic">
+                            <span className="min-w-0 flex-1 text-base leading-tight font-bold text-black italic sm:text-lg">
                                 {option.label}
                             </span>
                             <span
@@ -105,7 +105,7 @@ const SelectAiMatch = ({ onBack, onStartGame }: Props) => {
     const [oAi, setOAi] = useState<AiModeValue>(GameMode.BLIND_BFS_AI);
 
     return (
-        <main className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-teal px-4 py-8 sm:px-6 lg:px-10">
+        <main className="relative flex w-full flex-1 items-center justify-center overflow-hidden bg-teal px-3 py-6 sm:px-6 sm:py-8 lg:px-10">
             <div
                 className="pointer-events-none absolute inset-0 opacity-20"
                 style={{
@@ -116,7 +116,7 @@ const SelectAiMatch = ({ onBack, onStartGame }: Props) => {
             />
             <h1 className="sr-only">Choose AI players</h1>
 
-            <div className="relative mx-auto flex w-full max-w-5xl flex-col gap-6">
+            <div className="relative mx-auto flex w-full max-w-5xl flex-col gap-4 sm:gap-6">
                 <div>
                     <button
                         type="button"
@@ -127,10 +127,10 @@ const SelectAiMatch = ({ onBack, onStartGame }: Props) => {
                     </button>
                 </div>
 
-                <div className="grid items-center gap-6 lg:grid-cols-[1fr_auto_1fr]">
+                <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-3 lg:gap-6">
                     <PlayerSelector player="X" value={xAi} onChange={setXAi} />
 
-                    <div className="mx-auto flex h-17 w-17 items-center justify-center rounded-full border-4 border-black bg-peach text-xl font-black text-black italic shadow-md lg:h-20 lg:w-20 lg:text-2xl">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border-4 border-black bg-peach text-lg font-black text-black italic shadow-md lg:h-20 lg:w-20 lg:text-2xl">
                         VS
                     </div>
 

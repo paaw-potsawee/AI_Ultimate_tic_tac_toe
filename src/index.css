@@ -26,12 +26,16 @@
 
 @layer base {
     html {
-        @apply bg-teal font-sans;
+        @apply min-h-full bg-teal font-sans;
     }
 
     body {
-        @apply min-h-screen font-sans antialiased;
+        @apply m-0 min-h-dvh w-full overflow-x-hidden font-sans antialiased;
         font-family: var(--font-sans);
+    }
+
+    #root {
+        @apply min-h-dvh w-full;
     }
 
     h1 {
@@ -51,6 +55,6 @@
     }
 
     button {
-        @apply hover:cursor-pointer;
+        @apply touch-manipulation hover:cursor-pointer;
     }
 }
