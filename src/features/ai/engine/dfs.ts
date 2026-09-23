@@ -12,6 +12,7 @@ import { SEARCH_TIMEOUT } from "./shared/constants";
 import { WIN_SCORE } from "./heuristic/constants";
 import { calculateScore } from "./heuristic/evaluation";
 import { BoundedTranspositionTable } from "./shared/transpositionTable";
+import { getZobristKey } from "./shared/zobrist";
 
 const TIME_BUDGET_MS = 1000;
 
@@ -52,6 +53,12 @@ const dfs = (
     if (depth === 0) {
         return -calculateScore(state);
     }
+    // check cache
+    const key = getZobristKey(state);
+    const cached = context.table.get(key);
+    if (cached && cached.depth >= depth) {
+        return cached.value;
+    }
 
     const moves = getAvailableMoves(state);
     let bestScore = state.player === 0 ? -Infinity : Infinity;
@@ -64,6 +71,12 @@ const dfs = (
         const nextState = applyMove(state, boardIdx, cellIdx);
         const currentScore = dfs(nextState, depth - 1, context);
         bestScore = minimaxScore(state.player, bestScore, currentScore);
+    });
+    context.table.set(key, {
+        value: bestScore,
+        depth,
+        bestMove: null,
+        flag: "EXACT",
     });
 
     return bestScore;
@@ -82,9 +95,7 @@ export const evaluateDFS = (state: GameState, depth: number): number | null => {
         nodes: 0,
         table: new BoundedTranspositionTable(),
     };
-    console.log(depth);
     for (let i = 0; i < depth; i++) {
-        console.log(`start ${i}`);
         if (performance.now() >= context.deadline) break;
         let bestScore = state.player === 0 ? -Infinity : Infinity;
         let bestLocalMove: number | null = null;
@@ -104,15 +115,13 @@ export const evaluateDFS = (state: GameState, depth: number): number | null => {
                     return bestLocalMove;
                 bestScore = minimaxScore(state.player, bestScore, score);
             }
-            console.log(`Current iteration ${i} score ${bestScore}`);
         } catch (error) {
-            console.log("search time out bla bla");
+            console.log("search time out bla bla ", i);
             if (error !== SEARCH_TIMEOUT) throw error;
             break;
         }
         // assume that deeper search always get better result
         bestMove = bestLocalMove;
-        console.log(`end ${i}`);
     }
     // fallback to first move if all moves lead to a loss
     return bestMove ?? availableMoves[0];
