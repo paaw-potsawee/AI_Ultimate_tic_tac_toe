@@ -1,158 +1,121 @@
 # AI Ultimate Tic-Tac-Toe
 
-An Ultimate Tic-Tac-Toe web application for experimenting with and comparing Blind Search and Heuristic Search strategies, developed as part of an Artificial Intelligence course.
+A modern Ultimate Tic-Tac-Toe web application built to explore and compare **Blind Search** and **Heuristic Search** algorithms in an adversarial game environment.
 
-## Key Features
+## Overview
 
-- Local two-player pass-and-play mode
-- Play against AI with side selection (X or O)
-- Comparison between Blind DFS, Blind BFS, and Heuristic AI
-- Spectate AI vs AI matches
-- Move undo, board reset, move history tracking, and winning line visualization
-- Background AI computations via Web Worker to ensure a responsive UI
+Ultimate Tic-Tac-Toe expands classical Tic-Tac-Toe into a two-tier nested game:
 
-## Game Rules
+- A macro 3×3 grid composed of nine 3×3 local boards.
+- Winning a local board claims that cell on the macro board.
+- The cell chosen in a local board routes the opponent to the corresponding local board on the next turn. If the target board is closed or full, the player receives a free choice.
+- The overall game is won by capturing three aligned local boards on the macro board.
 
-Ultimate Tic-Tac-Toe consists of nine 3×3 local boards arranged in a 3×3 grid. Winning a local board claims that position on the macro board.
+With branching factors up to 81 and game lengths often exceeding 50 turns, the game presents a complex state space ($>10^{40}$ states) that cannot be solved by brute force.
 
-The cell index chosen within a local board determines which local board the opponent must play on in the subsequent turn. If the targeted local board has already been won or is full, the opponent is granted a free move to play in any open local board. A player wins the game by aligning three claimed local boards in a row, column, or diagonal on the macro board. The game ends in a draw if all local boards are closed without a macro winner.
+---
 
 ## Game Modes
 
-| Mode in Game    | Description                                                 |
-| --------------- | ----------------------------------------------------------- |
-| Player          | Two players alternating turns locally                       |
-| The Heuristic   | Play against a Minimax AI with heuristic evaluation         |
-| The Blind (DFS) | Play against an AI using Depth-First Search with depth 10   |
-| The Blind (BFS) | Play against an AI using Breadth-First Search with depth 10 |
-| AI vs AI        | Pick any AI engine for X and O and watch them compete       |
+- **Local Player vs Player**: Two players alternating turns locally.
+- **Player vs AI**: Play against any search engine with side selection (X or O).
+    - **The Blind (BFS)**: Goal-oriented Breadth-First Search seeking the shallowest winning line.
+    - **The Blind (DFS)**: Iterative Deepening Depth-First Search with full Minimax alternation.
+    - **The Heuristic**: Iterative Deepening Minimax with Alpha-Beta pruning, move ordering, and board evaluation.
+- **AI vs AI**: Spectator mode pitting any two search engines against each other.
 
-## Heuristic AI
+---
 
-The Heuristic AI uses iterative-deepening Minimax with alpha-beta pruning, featuring a maximum search depth of 10 and a soft time budget of 900 ms per move.
+## Architecture Overview
 
-Board state evaluation considers:
+The application follows a feature-driven architecture separating UI, game state, and computation:
 
-- Claimed local boards and their strategic positions on the macro board.
-- One-in-a-line and two-in-a-line configurations on both local and macro levels.
-- Positional weightings for center, corner, and edge cells.
-- Advantage of granting or denying the opponent free board choice.
-- Terminal game states (win, loss, draw) and distance to terminal depth.
+```text
+src/
+├── components/       # Shared UI primitives, headers, and setup screens
+├── features/
+│   ├── board/        # Game engine, bitboard state representation, UI boards, and store
+│   └── ai/           # Search engines (BFS, DFS, Heuristic), worker hook, and dedicated Web Worker
+├── lib/              # Shared helper functions
+└── types/            # Application-wide domain types
 
-The search engine employs move ordering and a transposition table to prune branches, refreshing the transposition cache across iterative deepening depths.
+tests/
+├── benchmark/        # Automated AI vs AI matchup runner and metric collector
+└── lib/ & store/     # Unit and integration test suites
+```
+
+### Key Design Principles
+
+- **Worker-Isolated Computation**: AI searches run on a dedicated background Web Worker thread, keeping UI rendering at 60 FPS without frame drops during deep tree traversal.
+- **Feature Modularization**: Domain logic is strictly isolated inside `features/board` and `features/ai`, each exposing clear public interfaces via `index.ts`.
+- **Bitboard State Representation**: Core game state and win detection leverage fast bitwise operations for high-throughput node evaluation during search.
+
+---
+
+## Documentation Deep Dives
+
+Detailed technical documentation and empirical data are available in dedicated guides:
+
+- **[AI Search Strategies & Benchmark Analysis](src/features/ai/README.md)**: Formal AIMA problem formulation, algorithmic breakdowns, and head-to-head empirical comparison (optimality, runtime, memory, win rates, node exploration counts).
+- **[Engine Architecture & Shared Infrastructure](src/features/ai/engine/README.md)**: Internal mechanics of the transposition table, dual-hash Zobrist keys, deadline enforcement, and move encoding contracts.
+
+---
 
 ## Tech Stack
 
-- React 19 and TypeScript 6
-- Vite 8
-- Tailwind CSS 4
-- Web Worker
-- Vitest, jsdom, and React Testing Library
-- Bitboard representation with `Uint16Array` for high-performance board state evaluation
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS
+- **Concurrency**: Web Workers (off-main-thread search execution)
+- **Testing & Tooling**: Vitest, React Testing Library, Oxlint, Prettier, Bun
+
+---
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 22.12+ (or Bun)
-- npm or Bun
+- Node.js 22.12+ or [Bun](https://bun.sh)
 
-### Installation & Running
-
-Using Bun:
+### Installation & Development
 
 ```shell
 bun install
 bun run dev
 ```
 
-Or using npm:
+_(Or using npm: `npm install && npm run dev`)_
 
-```shell
-npm install
-npm run dev
-```
+Open the local development URL shown in your terminal (default `http://localhost:5173`).
 
-Open the URL shown in your terminal (typically `http://localhost:5173`).
-
-### Running with Docker
-
-The multi-stage Docker build uses Bun for building the static assets and Nginx for serving production files:
+### Docker Deployment
 
 ```shell
 docker compose up --build
 ```
 
-Then navigate to `http://localhost:3000`.
+Access the production application at `http://localhost:3000`.
+
+---
 
 ## Available Scripts
 
-| Command             | Description                                                                              |
-| ------------------- | ---------------------------------------------------------------------------------------- |
-| `npm run dev`       | Starts the development server                                                            |
-| `npm test`          | Type-checks tests and runs regression test suite with Vitest                             |
-| `npm run build`     | Type-checks production source and builds for production                                  |
-| `npm run lint`      | Lints code with Oxlint                                                                   |
-| `npm run format`    | Formats files using Prettier and Tailwind plugin                                         |
-| `npm run preview`   | Previews the production build locally                                                    |
-| `npm run benchmark` | Runs all 9 AI vs AI matchups and writes results to `tests/benchmark/results/latest.json` |
+| Command             | Description                                                      |
+| ------------------- | ---------------------------------------------------------------- |
+| `bun run dev`       | Starts local development server with Vite                        |
+| `bun run build`     | Type-checks and builds production bundle                         |
+| `bun run test`      | Executes full Vitest regression test suite                       |
+| `bun run lint`      | Lints codebase with Oxlint                                       |
+| `bun run format`    | Formats code using Prettier and Tailwind plugin                  |
+| `bun run benchmark` | Runs all 9 AI matchup pairings and generates performance metrics |
+| `bun run preview`   | Serves local production build preview                            |
 
-_(You can also use `bun run <script>` or `bun test`)_
+_(All scripts can also be run with `npm run <command>`)_
 
-## AI Documentation
+---
 
-- [`src/features/ai/README.md`](src/features/ai/README.md) — Formal problem definition, algorithm descriptions (BFS, IDS DFS Minimax, Alpha-Beta IDDFS), and benchmark comparison (optimality, runtime, memory, win rates, node counts).
-- [`src/features/ai/engine/README.md`](src/features/ai/engine/README.md) — Internal engine documentation: how each algorithm uses the shared transposition table, Zobrist hashing, node counting, and move encoding.
+## Submission & Links
 
-## Project Structure
-
-The codebase is organized using a feature-driven modular architecture:
-
-```text
-src/
-├── components/                 # Shared UI and setup components
-│   ├── header/                 # Application header (Header.tsx)
-│   ├── setup/                  # Setup screens (SelectMode.tsx, SelectSide.tsx)
-│   └── ui/                     # Reusable primitive UI components (Button.tsx)
-├── features/
-│   ├── ai/                     # AI feature module
-│   │   ├── engine/             # Pure, worker-safe search algorithms (zero React dependencies)
-│   │   │   ├── ai.ts           # Strategy dispatcher (DFS, BFS, Heuristic)
-│   │   │   ├── bfs.ts          # Breadth-First Search implementation
-│   │   │   ├── dfs.ts          # Depth-First Search implementation
-│   │   │   ├── heuristicSearch.ts # Minimax with Alpha-Beta pruning & Transposition Table
-│   │   │   └── queue.ts        # Queue data structure for BFS traversal
-│   │   ├── hooks/              # React lifecycle integration
-│   │   │   └── useAiWorker.ts  # Worker lifecycle hook, bridges Web Worker to board store
-│   │   ├── types/              # AI and worker message types
-│   │   │   └── aiWorker.ts     # WorkerRequest and WorkerResponse types
-│   │   ├── worker/             # Dedicated Web Worker thread
-│   │   │   └── aiWorker.ts     # Worker entrypoint (imports directly from engine/ and types/)
-│   │   └── index.ts            # Public API (exports useAiWorker and worker message types)
-│   └── board/                  # Ultimate Tic-Tac-Toe board domain feature
-│       ├── components/         # Board visual components (UltimateBoard, LocalBoard, Cell, etc.)
-│       ├── store/              # State management and external store integration
-│       │   └── boardStore.ts   # Board state, move handling, undo/reset, & AI notifications
-│       ├── types/              # Board domain types (board.ts, game.ts, winLine.ts)
-│       ├── game.ts             # Core game engine (rules, move validation, win detection)
-│       ├── gameRules.ts        # Constants, bitmasks, and win line definitions
-│       └── index.ts            # Public API for board components and game types
-├── lib/
-│   └── cn.ts                   # Tailwind CSS class merge utility (clsx + tailwind-merge)
-├── types/
-│   └── gameMode.ts             # Shared application-wide game mode definitions
-├── App.tsx                     # Top-level screen coordinator & mounts useAiWorker
-├── main.tsx                    # Application entrypoint
-└── index.css                   # Global styles & Tailwind CSS theme configuration
-
-tests/
-├── lib/                        # Game rules and heuristic regression tests
-├── store/                      # BoardStore and AI worker lifecycle tests
-└── workers/                    # Worker response protocol tests
-```
-
-### Architectural Highlights
-
-- **Feature Modularization**: Core domain logic is encapsulated under `features/board` and `features/ai`, each exposing a curated public API via `index.ts`.
-- **Worker Isolation**: `aiWorker.ts` runs inside a dedicated Web Worker thread. It imports directly from `../engine` and `../types` via relative paths, avoiding barrel imports and React dependencies.
-- **Hook-Store Decoupling**: `useAiWorker` manages the Worker lifecycle in the React component tree and registers triggers with `boardStore`, keeping the store free of direct Worker instantiation.
+| Asset              | Link                              |
+| ------------------ | --------------------------------- |
+| Web Application    | _[Add deployed application URL]_  |
+| GitHub Repository  | _[Add GitHub repository URL]_     |
+| Presentation Video | _[Add YouTube presentation link]_ |
