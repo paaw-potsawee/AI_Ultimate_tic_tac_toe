@@ -19,13 +19,13 @@ The cell index chosen within a local board determines which local board the oppo
 
 ## Game Modes
 
-| Mode in Game    | Description                                                |
-| --------------- | ---------------------------------------------------------- |
-| Player          | Two players alternating turns locally                      |
-| The Heuristic   | Play against a Minimax AI with heuristic evaluation        |
-| The Blind (DFS) | Play against an AI using Depth-First Search with depth 5   |
-| The Blind (BFS) | Play against an AI using Breadth-First Search with depth 5 |
-| AI vs AI        | Pick any AI engine for X and O and watch them compete      |
+| Mode in Game    | Description                                                 |
+| --------------- | ----------------------------------------------------------- |
+| Player          | Two players alternating turns locally                       |
+| The Heuristic   | Play against a Minimax AI with heuristic evaluation         |
+| The Blind (DFS) | Play against an AI using Depth-First Search with depth 10   |
+| The Blind (BFS) | Play against an AI using Breadth-First Search with depth 10 |
+| AI vs AI        | Pick any AI engine for X and O and watch them compete       |
 
 ## Heuristic AI
 
@@ -87,16 +87,22 @@ Then navigate to `http://localhost:3000`.
 
 ## Available Scripts
 
-| Command           | Description                                                  |
-| ----------------- | ------------------------------------------------------------ |
-| `npm run dev`     | Starts the development server                                |
-| `npm test`        | Type-checks tests and runs regression test suite with Vitest |
-| `npm run build`   | Type-checks production source and builds for production      |
-| `npm run lint`    | Lints code with Oxlint                                       |
-| `npm run format`  | Formats files using Prettier and Tailwind plugin             |
-| `npm run preview` | Previews the production build locally                        |
+| Command             | Description                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------- |
+| `npm run dev`       | Starts the development server                                                            |
+| `npm test`          | Type-checks tests and runs regression test suite with Vitest                             |
+| `npm run build`     | Type-checks production source and builds for production                                  |
+| `npm run lint`      | Lints code with Oxlint                                                                   |
+| `npm run format`    | Formats files using Prettier and Tailwind plugin                                         |
+| `npm run preview`   | Previews the production build locally                                                    |
+| `npm run benchmark` | Runs all 9 AI vs AI matchups and writes results to `tests/benchmark/results/latest.json` |
 
 _(You can also use `bun run <script>` or `bun test`)_
+
+## AI Documentation
+
+- [`src/features/ai/README.md`](src/features/ai/README.md) — Formal problem definition, algorithm descriptions (BFS, IDS DFS Minimax, Alpha-Beta IDDFS), and benchmark comparison (optimality, runtime, memory, win rates, node counts).
+- [`src/features/ai/engine/README.md`](src/features/ai/engine/README.md) — Internal engine documentation: how each algorithm uses the shared transposition table, Zobrist hashing, node counting, and move encoding.
 
 ## Project Structure
 
