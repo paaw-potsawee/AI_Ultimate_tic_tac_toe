@@ -114,8 +114,8 @@ _(All scripts can also be run with `npm run <command>`)_
 
 ## Submission & Links
 
-| Asset              | Link                              |
-| ------------------ | --------------------------------- |
-| Web Application    | _[Add deployed application URL]_  |
-| GitHub Repository  | _[Add GitHub repository URL]_     |
-| Presentation Video | _[Add YouTube presentation link]_ |
+| Asset              | Link                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------- |
+| Web Application    | [ultimate-ttt.paawaa.dev](https://ultimate-ttt.paawaa.dev/)                                       |
+| GitHub Repository  | [paaw-potsawee/AI_Ultimate_tic_tac_toe](https://github.com/paaw-potsawee/AI_Ultimate_tic_tac_toe) |
+| Presentation Video | _[Add YouTube presentation link]_                                                                 |
