@@ -15,7 +15,7 @@ describe("evaluateHeuristic", () => {
         state[testCase.wonKey] = 0b000000011;
         state[testCase.boardKey][2] = 0b000000011;
 
-        expect(evaluateHeuristic(state)).toBe(20);
+        expect(evaluateHeuristic(state).move).toBe(20);
     });
 
     it("returns the encoded move when only one legal move remains", () => {
@@ -24,18 +24,18 @@ describe("evaluateHeuristic", () => {
         state.x[0] = 0b010001101;
         state.o[0] = 0b001110010;
 
-        expect(evaluateHeuristic(state)).toBe(8);
+        expect(evaluateHeuristic(state).move).toBe(8);
     });
 
     it("returns null for won and drawn terminal states", () => {
         const wonState = getUltimateBoard();
         wonState.wonX = 0b000000111;
-        expect(evaluateHeuristic(wonState)).toBeNull();
+        expect(evaluateHeuristic(wonState).move).toBeNull();
 
         const drawnState = getUltimateBoard();
         drawnState.x.fill(0b110001101);
         drawnState.o.fill(0b001110010);
-        expect(evaluateHeuristic(drawnState)).toBeNull();
+        expect(evaluateHeuristic(drawnState).move).toBeNull();
     });
 
     it(
@@ -45,7 +45,7 @@ describe("evaluateHeuristic", () => {
             const state = getUltimateBoard();
             const legalMoves = getAvailableMoves(state);
             const start = performance.now();
-            const move = evaluateHeuristic(state);
+            const { move } = evaluateHeuristic(state);
             const durationMs = performance.now() - start;
 
             expect(move).not.toBeNull();
@@ -66,7 +66,7 @@ describe("evaluateHeuristic", () => {
             state.o[7] = 0b000000111;
             state.o[4] = 0b000000011;
 
-            const move = evaluateHeuristic(state);
+            const { move } = evaluateHeuristic(state);
 
             expect(move).not.toBeNull();
             expect([1, 4, 7]).not.toContain((move as number) % 9);
@@ -81,7 +81,7 @@ describe("evaluateHeuristic", () => {
         const state = getUltimateBoard();
         const legalMoves = getAvailableMoves(state);
 
-        const move = evaluateHeuristic(state);
+        const { move } = evaluateHeuristic(state);
 
         expect(legalMoves).toContain(move);
     });

@@ -6,7 +6,7 @@ export interface OrderedMove {
     priority: number;
 }
 
-export interface SearchResult {
+export interface DepthSearchResult {
     move: number;
     value: number;
 }

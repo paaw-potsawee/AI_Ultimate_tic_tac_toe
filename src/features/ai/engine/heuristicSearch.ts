@@ -4,8 +4,12 @@ import { MAX_DEPTH, TIME_BUDGET_MS, WIN_SCORE } from "./heuristic/constants";
 import { calculateScore, getTerminalScore } from "./heuristic/evaluation";
 import { getOrderedMoves } from "./heuristic/moveOrdering";
 import { BoundedTranspositionTable } from "./shared/transpositionTable";
-import type { SearchContext, TranspositionFlag } from "./shared/types";
-import type { SearchResult } from "./heuristic/types";
+import type {
+    SearchContext,
+    SearchResult,
+    TranspositionFlag,
+} from "./shared/types";
+import type { DepthSearchResult } from "./heuristic/types";
 import { getZobristKey } from "./shared/zobrist";
 import { SEARCH_TIMEOUT } from "./shared/constants";
 import { visitNode, enforceDeadline } from "./shared/utils";
@@ -88,7 +92,7 @@ const searchAtDepth = (
     depth: number,
     preferredMove: number | null,
     context: SearchContext,
-): SearchResult => {
+): DepthSearchResult => {
     const isMaximizing = state.player === 1;
     const orderedMoves = getOrderedMoves(state, legalMoves, preferredMove, () =>
         enforceDeadline(context),
@@ -114,12 +118,13 @@ const searchAtDepth = (
     return { move: bestMove, value: bestValue };
 };
 
-export const evaluateHeuristic = (state: GameState): number | null => {
-    if (checkGameWinner(state) !== null) return null;
+export const evaluateHeuristic = (state: GameState): SearchResult => {
+    if (checkGameWinner(state) !== null) return { move: null, nodes: 0 };
 
     const availableMoves = getAvailableMoves(state);
-    if (availableMoves.length === 0) return null;
-    if (availableMoves.length === 1) return availableMoves[0];
+    if (availableMoves.length === 0) return { move: null, nodes: 0 };
+    if (availableMoves.length === 1)
+        return { move: availableMoves[0], nodes: 0 };
 
     const deadline = performance.now() + TIME_BUDGET_MS;
     const fallbackMove = getOrderedMoves(state, availableMoves)[0].move;
@@ -152,5 +157,8 @@ export const evaluateHeuristic = (state: GameState): number | null => {
         }
     }
 
-    return availableMoves.includes(bestMove) ? bestMove : fallbackMove;
+    const chosenMove = availableMoves.includes(bestMove)
+        ? bestMove
+        : fallbackMove;
+    return { move: chosenMove, nodes: context.nodes };
 };

@@ -11,7 +11,7 @@ describe("evaluateDFS", () => {
         state.wonX = 0b000000011;
 
         // needs depth ≥ 2 to see: X plays cell 1 → X plays cell 2 → WIN_SCORE
-        const move = evaluateDFS(state, 4);
+        const { move } = evaluateDFS(state, 4);
         expect(move).toBe(20);
     });
 
@@ -25,7 +25,7 @@ describe("evaluateDFS", () => {
         state[testCase.boardKey][0] = 0b000000011;
         state[testCase.oppKey][0] = 0b000000000;
 
-        expect(evaluateDFS(state, 2)).toBe(2);
+        expect(evaluateDFS(state, 2).move).toBe(2);
     });
 
     it.each([
@@ -38,7 +38,7 @@ describe("evaluateDFS", () => {
         state[testCase.oppKey][0] = 0b000000011;
         state[testCase.boardKey][0] = 0b000000000;
 
-        expect(evaluateDFS(state, 2)).toBe(2);
+        expect(evaluateDFS(state, 2).move).toBe(2);
     });
 
     it.each([
@@ -51,6 +51,6 @@ describe("evaluateDFS", () => {
         state[testCase.wonKey] = 0b000000011;
         state[testCase.boardKey][2] = 0b000000011;
 
-        expect(evaluateDFS(state, 2)).toBe(20);
+        expect(evaluateDFS(state, 2).move).toBe(20);
     });
 });

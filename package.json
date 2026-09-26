@@ -8,6 +8,7 @@
         "build": "tsc -b && vite build",
         "lint": "oxlint",
         "test": "tsc -p tsconfig.test.json && vitest run --pool=forks --maxWorkers=1",
+        "benchmark": "bun tests/benchmark/run.ts",
         "format": "prettier . --write",
         "preview": "vite preview"
     },

@@ -10,13 +10,13 @@ export const getAiMove = (state: GameState, algorithm: AiModeValue): Move => {
     let encoded: number | null;
     switch (algorithm) {
         case GameMode.BLIND_DFS_AI:
-            encoded = evaluateDFS(state, 10);
+            encoded = evaluateDFS(state, 10).move;
             break;
         case GameMode.BLIND_BFS_AI:
-            encoded = evaluateBFS(state, 5);
+            encoded = evaluateBFS(state, 10).move;
             break;
         case GameMode.HEURISTIC_AI:
-            encoded = evaluateHeuristic(state);
+            encoded = evaluateHeuristic(state).move;
             break;
         default:
             throw new Error("Invalid option");

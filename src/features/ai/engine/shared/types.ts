@@ -1,8 +1,4 @@
 import type { ZobristKey } from "./zobrist";
-export interface SearchContext {
-    deadline: number;
-    nodes: number;
-}
 
 export type TranspositionFlag = "EXACT" | "LOWER" | "UPPER";
 
@@ -13,13 +9,18 @@ export interface TranspositionEntry {
     depth: number;
 }
 
+export interface TranspositionTable {
+    get: (key: ZobristKey) => TranspositionEntry | undefined;
+    set: (key: ZobristKey, entry: TranspositionEntry) => void;
+}
+
 export interface SearchContext {
     deadline: number;
     nodes: number;
     table: TranspositionTable;
 }
 
-export interface TranspositionTable {
-    get: (key: ZobristKey) => TranspositionEntry | undefined;
-    set: (key: ZobristKey, entry: TranspositionEntry) => void;
+export interface SearchResult {
+    move: number | null;
+    nodes: number;
 }

@@ -1,6 +1,6 @@
 export const WIN_SCORE = 1_000_000;
 export const MAX_DEPTH = 10;
-export const TIME_BUDGET_MS = 900;
+export const TIME_BUDGET_MS = 100;
 export const TRANSPOSITION_TABLE_LIMIT = 100_000;
 
 // Center cell (index 4) scores highest as it intersects the most winning lines.

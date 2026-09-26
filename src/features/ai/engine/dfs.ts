@@ -5,7 +5,7 @@ import {
     applyMove,
 } from "@/features/board/game";
 import { BOARD_CELL_COUNT } from "@/features/board/gameRules";
-import type { SearchContext } from "./shared/types";
+import type { SearchContext, SearchResult } from "./shared/types";
 import { visitNode } from "./shared/utils";
 import { SEARCH_TIMEOUT } from "./shared/constants";
 // borrow constant / scoring system from heuristic search for leaf in blind search
@@ -45,7 +45,6 @@ const dfs = (
     const winner = checkGameWinner(state);
     if (winner !== null) {
         // score is zero when draw
-        console.log(`found terminal state ${winner}`);
         if (winner === -1) return 0;
         return winner === 0 ? WIN_SCORE : -WIN_SCORE;
     }
@@ -82,10 +81,10 @@ const dfs = (
     return bestScore;
 };
 
-export const evaluateDFS = (state: GameState, depth: number): number | null => {
+export const evaluateDFS = (state: GameState, depth: number): SearchResult => {
     const availableMoves = getAvailableMoves(state);
     if (availableMoves.length === 0) {
-        return null;
+        return { move: null, nodes: 0 };
     }
 
     let bestMove: number | null = null;
@@ -112,17 +111,14 @@ export const evaluateDFS = (state: GameState, depth: number): number | null => {
                     (state.player === 0 && score >= WIN_SCORE) ||
                     (state.player === 1 && score <= -WIN_SCORE)
                 )
-                    return bestLocalMove;
+                    return { move: bestLocalMove, nodes: context.nodes };
                 bestScore = minimaxScore(state.player, bestScore, score);
             }
         } catch (error) {
-            console.log("search time out bla bla ", i);
             if (error !== SEARCH_TIMEOUT) throw error;
             break;
         }
-        // assume that deeper search always get better result
         bestMove = bestLocalMove;
     }
-    // fallback to first move if all moves lead to a loss
-    return bestMove ?? availableMoves[0];
+    return { move: bestMove ?? availableMoves[0], nodes: context.nodes };
 };
