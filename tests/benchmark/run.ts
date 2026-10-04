@@ -13,7 +13,7 @@ import type { SearchResult } from "../../src/features/ai/engine/shared/types";
 
 const BFS_DEPTH = 10;
 const DFS_DEPTH = 10;
-const GAMES_PER_MATCHUP = 2;
+const GAMES_PER_MATCHUP = 10;
 const RESULTS_DIR = "tests/benchmark/results";
 const RESULTS_FILE = `${RESULTS_DIR}/latest.json`;
 
