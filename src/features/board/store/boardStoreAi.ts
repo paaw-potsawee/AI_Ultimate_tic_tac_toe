@@ -1,7 +1,12 @@
 import type { WorkerRequest } from "../../ai/types/aiWorker";
 import { GameMode, type AiModeValue } from "@/types/gameMode";
 import { applyMove, checkGameWinner } from "../game";
-import { emit, refreshSnapshots, store } from "./boardStoreState";
+import {
+    emit,
+    refreshAiStatsSnapshot,
+    refreshSnapshots,
+    store,
+} from "./boardStoreState";
 
 const AIVAI_DELAY_MS = 500;
 let aiEpoch = 0;
@@ -78,11 +83,18 @@ export const notifyAiMoveResult = (
     board: number,
     cell: number,
     durationMs: number,
+    nodes: number,
     epoch: number,
 ): void => {
     if (epoch !== aiEpoch) return;
 
-    console.log(`AI move took ${durationMs.toFixed(1)} milliseconds`);
+    if (store.option === GameMode.AIVAI) {
+        const player = store.currentPlayer;
+        store.aiStats[player].totalNodes += nodes;
+        store.aiStats[player].totalMs += durationMs;
+        store.aiStats[player].turns += 1;
+        refreshAiStatsSnapshot();
+    }
 
     const nextState = applyMove(store.state, board, cell);
 

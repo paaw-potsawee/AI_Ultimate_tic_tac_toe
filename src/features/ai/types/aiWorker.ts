@@ -13,6 +13,7 @@ export interface WorkerSuccessResponse {
     cell: number;
     epoch: number;
     durationMs: number;
+    nodes: number;
 }
 
 export interface WorkerErrorResponse {

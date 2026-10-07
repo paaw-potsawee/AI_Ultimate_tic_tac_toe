@@ -14,6 +14,17 @@ import {
 
 const initialState = getUltimateBoard();
 
+export interface AiTurnStats {
+    totalNodes: number;
+    totalMs: number;
+    turns: number;
+}
+
+const emptyStats = (): [AiTurnStats, AiTurnStats] => [
+    { totalNodes: 0, totalMs: 0, turns: 0 },
+    { totalNodes: 0, totalMs: 0, turns: 0 },
+];
+
 export const store = {
     state: initialState,
     currentPlayer: 0 as Player,
@@ -29,6 +40,13 @@ export const store = {
     isAiTurn: false,
     boardSnapshot: toRenderBoard(initialState) as RenderBoard,
     gameWinningLineSnapshot: getGameWinningLine(initialState),
+    aiStats: emptyStats() as [AiTurnStats, AiTurnStats],
+    aiStatsSnapshot: emptyStats() as [AiTurnStats, AiTurnStats],
+};
+
+export const resetAiStats = (): void => {
+    store.aiStats = emptyStats();
+    store.aiStatsSnapshot = emptyStats();
 };
 
 export const listeners: Set<() => void> = new Set();
@@ -45,6 +63,10 @@ export const refreshSnapshots = (): void => {
     );
     store.boardSnapshot = toRenderBoard(store.state);
     store.gameWinningLineSnapshot = getGameWinningLine(store.state);
+};
+
+export const refreshAiStatsSnapshot = (): void => {
+    store.aiStatsSnapshot = [{ ...store.aiStats[0] }, { ...store.aiStats[1] }];
 };
 
 refreshSnapshots();

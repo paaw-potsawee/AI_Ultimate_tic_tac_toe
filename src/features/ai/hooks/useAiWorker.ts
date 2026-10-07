@@ -38,6 +38,7 @@ export const useAiWorker = (): void => {
                     event.data.board,
                     event.data.cell,
                     event.data.durationMs,
+                    event.data.nodes,
                     event.data.epoch,
                 );
             };

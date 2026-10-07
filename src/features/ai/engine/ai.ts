@@ -6,17 +6,26 @@ import { evaluateBFS } from "./bfs";
 import { evaluateDFS } from "./dfs";
 import { BOARD_CELL_COUNT } from "@/features/board/gameRules";
 
-export const getAiMove = (state: GameState, algorithm: AiModeValue): Move => {
+export interface AiResult {
+    move: Move;
+    nodes: number;
+}
+
+export const getAiMove = (
+    state: GameState,
+    algorithm: AiModeValue,
+): AiResult => {
     let encoded: number | null;
+    let nodes = 0;
     switch (algorithm) {
         case GameMode.BLIND_DFS_AI:
-            encoded = evaluateDFS(state, 10).move;
+            ({ move: encoded, nodes } = evaluateDFS(state, 10));
             break;
         case GameMode.BLIND_BFS_AI:
-            encoded = evaluateBFS(state, 10).move;
+            ({ move: encoded, nodes } = evaluateBFS(state, 10));
             break;
         case GameMode.HEURISTIC_AI:
-            encoded = evaluateHeuristic(state).move;
+            ({ move: encoded, nodes } = evaluateHeuristic(state));
             break;
         default:
             throw new Error("Invalid option");
@@ -30,12 +39,15 @@ export const getAiMove = (state: GameState, algorithm: AiModeValue): Move => {
     const cell = encoded % BOARD_CELL_COUNT;
 
     return {
-        player: state.player,
-        localRow: Math.floor(board / 3),
-        localCol: board % 3,
-        cellRow: Math.floor(cell / 3),
-        cellCol: cell % 3,
-        board,
-        cell,
+        move: {
+            player: state.player,
+            localRow: Math.floor(board / 3),
+            localCol: board % 3,
+            cellRow: Math.floor(cell / 3),
+            cellCol: cell % 3,
+            board,
+            cell,
+        },
+        nodes,
     };
 };

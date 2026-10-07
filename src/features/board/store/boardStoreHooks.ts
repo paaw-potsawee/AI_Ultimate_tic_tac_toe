@@ -31,6 +31,13 @@ export const useBoardStore = () => {
         },
         () => store.gameWinningLineSnapshot,
     );
+    const aiStatsSnapshot = useSyncExternalStore(
+        (listener) => {
+            listeners.add(listener);
+            return () => listeners.delete(listener);
+        },
+        () => store.aiStatsSnapshot,
+    );
 
     return {
         board,
@@ -43,6 +50,7 @@ export const useBoardStore = () => {
         history: store.history,
         availableLocalBoards: store.availableLocalBoards,
         isAiTurn,
+        aiStatsSnapshot,
     };
 };
 

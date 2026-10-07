@@ -6,7 +6,7 @@ addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
     const start = performance.now();
 
     try {
-        const move = getAiMove(state, algorithm);
+        const { move, nodes } = getAiMove(state, algorithm);
         const durationMs = performance.now() - start;
 
         const response: WorkerResponse = {
@@ -15,6 +15,7 @@ addEventListener("message", (event: MessageEvent<WorkerRequest>) => {
             cell: move.cell,
             epoch,
             durationMs,
+            nodes,
         };
 
         (postMessage as (message: WorkerResponse) => void)(response);

@@ -16,6 +16,7 @@ import {
     emit,
     optionListeners,
     refreshSnapshots,
+    resetAiStats,
     store,
 } from "./boardStoreState";
 
@@ -33,6 +34,7 @@ const resetState = (): void => {
     store.winner = null;
     store.history = [];
     store.isAiTurn = false;
+    resetAiStats();
     refreshSnapshots();
 };
 

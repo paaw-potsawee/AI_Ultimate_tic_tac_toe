@@ -81,6 +81,7 @@ describe("BoardStore AI worker lifecycle", () => {
                 cell: 4,
                 epoch: request.epoch,
                 durationMs: 10,
+                nodes: 0,
             }),
         );
         expect(hook.result.current.board.history).toHaveLength(0);
@@ -182,6 +183,7 @@ describe("BoardStore AI worker lifecycle", () => {
                 cell: 4,
                 epoch: firstRequest.epoch,
                 durationMs: 10,
+                nodes: 0,
             }),
         );
         act(() => vi.advanceTimersByTime(500));

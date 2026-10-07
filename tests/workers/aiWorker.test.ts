@@ -41,7 +41,10 @@ describe("AI worker response protocol", () => {
 
     it("posts a discriminated success response", () => {
         const state = getUltimateBoard();
-        mocks.getAiMove.mockReturnValue({ board: 4, cell: 4 });
+        mocks.getAiMove.mockReturnValue({
+            move: { board: 4, cell: 4 },
+            nodes: 42,
+        });
 
         messageHandler({
             data: {
@@ -58,6 +61,7 @@ describe("AI worker response protocol", () => {
                 cell: 4,
                 epoch: 3,
                 durationMs: expect.any(Number) as number,
+                nodes: 42,
             }),
         );
     });
