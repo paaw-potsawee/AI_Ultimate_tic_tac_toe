@@ -11,7 +11,7 @@ interface Props {
 }
 
 const LocalBoard = ({ localRow, localCol }: Props) => {
-    const { board, availableLocalBoards } = useBoardStore();
+    const { board, availableLocalBoards, winner } = useBoardStore();
     const localData = board[localRow][localCol];
     const isAvailable = availableLocalBoards.some(
         (b) => b.localRow === localRow && b.localCol === localCol,
@@ -21,7 +21,9 @@ const LocalBoard = ({ localRow, localCol }: Props) => {
         <div
             className={cn(
                 "relative min-w-0 rounded-md border-2 p-0.5 transition-colors sm:rounded-lg sm:border-[3px]",
-                isAvailable ? "border-burgundy" : "border-transparent",
+                isAvailable && winner === null
+                    ? "border-burgundy"
+                    : "border-transparent",
             )}
         >
             <div className="relative grid grid-cols-3 gap-px bg-ocean-200/60">
