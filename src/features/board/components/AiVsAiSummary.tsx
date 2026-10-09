@@ -56,7 +56,7 @@ const AiVsAiSummary = () => {
                 </tbody>
             </table>
             <div className="mt-1 text-[10px] font-bold tracking-wide text-black/40 uppercase">
-                Nodes explored ≈ memory usage
+                Nodes explored = states visited per turn, not memory
             </div>
         </div>
     );

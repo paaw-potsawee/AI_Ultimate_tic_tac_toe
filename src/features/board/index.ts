@@ -1,3 +1,4 @@
+export { default as AiErrorNotice } from "./components/AiErrorNotice";
 export { default as AiVsAiSummary } from "./components/AiVsAiSummary";
 export { default as Cell } from "./components/Cell";
 export { default as GameControls } from "./components/GameControls";
@@ -15,4 +16,5 @@ export * from "./game";
 export * from "./gameRules";
 export * from "./types/board";
 export * from "./types/game";
+export * from "./types/review";
 export * from "./types/winLine";

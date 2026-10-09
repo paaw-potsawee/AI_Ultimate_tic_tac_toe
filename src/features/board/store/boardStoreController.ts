@@ -12,6 +12,7 @@ import {
     isAvailableCell,
 } from "../game";
 import { cancelAiWork, doAiMove, startAiTurn } from "./boardStoreAi";
+import { clearReview, syncReviewWithHistory } from "./boardStoreReview";
 import {
     emit,
     optionListeners,
@@ -19,6 +20,12 @@ import {
     resetAiStats,
     store,
 } from "./boardStoreState";
+
+/** True when the side to move is controlled by an AI engine. */
+const isAiToMove = (): boolean =>
+    store.option === GameMode.AIVAI ||
+    (store.option !== GameMode.PVP &&
+        store.currentPlayer !== store.humanPlayer);
 
 const resetState = (): void => {
     cancelAiWork();
@@ -34,6 +41,9 @@ const resetState = (): void => {
     store.winner = null;
     store.history = [];
     store.isAiTurn = false;
+    store.isPaused = false;
+    store.aiError = null;
+    clearReview();
     resetAiStats();
     refreshSnapshots();
 };
@@ -58,7 +68,41 @@ export const startGame = (
 
 export const leaveGame = (): void => {
     cancelAiWork();
+    store.isPaused = false;
+    store.aiError = null;
+    clearReview();
     emit();
+};
+
+/**
+ * AI vs AI only. Pausing cancels the pending or in-flight search so the match
+ * stops right away; resuming simply asks the current side to move again.
+ */
+export const togglePause = (): void => {
+    if (store.option !== GameMode.AIVAI) return;
+
+    if (store.isPaused) {
+        store.isPaused = false;
+        emit();
+        if (store.winner === null) startAiTurn(false);
+        return;
+    }
+
+    if (store.winner !== null) return;
+    cancelAiWork();
+    store.isPaused = true;
+    emit();
+};
+
+/**
+ * Asks the AI for a move again after a failed attempt left it idle. Retrying
+ * implies the match should run, so a paused AI vs AI match is resumed first;
+ * otherwise `doAiMove` would silently refuse while `isPaused` is set.
+ */
+export const retryAiMove = (): void => {
+    if (store.winner !== null || store.isAiTurn || !isAiToMove()) return;
+    store.isPaused = false;
+    doAiMove();
 };
 
 export const handleCellClick = ({
@@ -70,7 +114,8 @@ export const handleCellClick = ({
     if (
         store.winner !== null ||
         store.isAiTurn ||
-        store.option === GameMode.AIVAI
+        store.reviewSnapshot !== null ||
+        isAiToMove()
     ) {
         return;
     }
@@ -112,28 +157,37 @@ export const handleCellClick = ({
 export const back = (): void => {
     if (store.history.length === 0) return;
 
-    if (store.isAiTurn) {
-        cancelAiWork();
-        const result = gameBack(store.state, store.history);
+    if (store.isAiTurn || store.option === GameMode.AIVAI) cancelAiWork();
+
+    let result = gameBack(store.state, store.history);
+    store.state = result.state;
+    store.history = result.history;
+
+    // Against an AI, keep unwinding until it is the human's turn again so one
+    // Undo removes the AI reply together with the human move. When the last
+    // move was the human's own (the AI never replied), a single step is enough.
+    if (
+        store.option !== GameMode.PVP &&
+        store.option !== GameMode.AIVAI &&
+        store.history.length > 0 &&
+        store.state.player !== store.humanPlayer
+    ) {
+        result = gameBack(store.state, store.history);
         store.state = result.state;
         store.history = result.history;
-    } else {
-        if (store.option === GameMode.AIVAI) cancelAiWork();
-
-        let result = gameBack(store.state, store.history);
-        store.state = result.state;
-        store.history = result.history;
-
-        if (store.option !== GameMode.PVP && store.history.length > 0) {
-            result = gameBack(store.state, store.history);
-            store.state = result.state;
-            store.history = result.history;
-        }
     }
 
     store.currentPlayer = store.state.player;
     store.winner = checkGameWinner(store.state);
     store.isAiTurn = false;
+    store.aiError = null;
+    syncReviewWithHistory();
     refreshSnapshots();
     emit();
+
+    // If the undo landed on the AI's turn (for example the AI opened the game
+    // and its only move was undone), ask it to move instead of idling.
+    if (store.winner === null && isAiToMove()) {
+        startAiTurn(store.option === GameMode.AIVAI);
+    }
 };

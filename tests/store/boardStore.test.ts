@@ -152,7 +152,9 @@ describe("BoardStore AI worker lifecycle", () => {
 
         act(() => worker.emitError("Worker crashed"));
 
-        expect(worker.terminate).not.toHaveBeenCalled(); // hook nulled ref first
+        // The crashed worker is terminated exactly once (by the hook; the
+        // store's cancel path finds the ref already cleared).
+        expect(worker.terminate).toHaveBeenCalledOnce();
         expect(hook.result.current.board.isAiTurn).toBe(false);
         expect(console.error).toHaveBeenCalledWith(
             "AI worker crashed unexpectedly",

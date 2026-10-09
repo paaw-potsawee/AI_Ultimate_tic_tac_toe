@@ -2,7 +2,8 @@ import { useBoardStore } from "../store/boardStore";
 import { cn } from "@/lib/cn";
 
 const GameStatus = () => {
-    const { winner, isAiTurn, currentPlayer, history } = useBoardStore();
+    const { winner, isAiTurn, currentPlayer, history, isPaused } =
+        useBoardStore();
     const isGameOver = winner !== null;
     const displayedPlayer =
         winner === 0 ? "X" : winner === 1 ? "O" : currentPlayer;
@@ -52,7 +53,12 @@ const GameStatus = () => {
                     <div className="truncate text-xl leading-tight font-black tracking-wide sm:text-2xl">
                         {title}
                     </div>
-                    {!isGameOver && isAiTurn && (
+                    {!isGameOver && isPaused && (
+                        <div className="text-xs font-black tracking-wider uppercase">
+                            Paused
+                        </div>
+                    )}
+                    {!isGameOver && !isPaused && isAiTurn && (
                         <div className="animate-pulse text-xs font-black tracking-wider uppercase">
                             AI is thinking…
                         </div>

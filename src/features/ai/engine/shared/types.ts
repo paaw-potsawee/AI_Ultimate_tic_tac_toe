@@ -12,6 +12,7 @@ export interface TranspositionEntry {
 export interface TranspositionTable {
     get: (key: ZobristKey) => TranspositionEntry | undefined;
     set: (key: ZobristKey, entry: TranspositionEntry) => void;
+    readonly size: number;
 }
 
 export interface SearchContext {
@@ -23,4 +24,8 @@ export interface SearchContext {
 export interface SearchResult {
     move: number | null;
     nodes: number;
+    // Max live states at once: queue length (BFS) or call-stack depth (DFS/heuristic).
+    peakFrontier: number;
+    // Transposition-table entries held at return.
+    tableSize: number;
 }

@@ -37,6 +37,7 @@ export const cancelAiWork = (): void => {
 export const doAiMove = (): void => {
     if (
         store.winner !== null ||
+        store.isPaused ||
         store.option === GameMode.PVP ||
         triggerMove === null
     ) {
@@ -48,6 +49,7 @@ export const doAiMove = (): void => {
             ? store.aiPlayers[store.currentPlayer]
             : store.option;
 
+    store.aiError = null;
     store.isAiTurn = true;
     emit();
     triggerMove({
@@ -131,11 +133,13 @@ export const notifyAiError = (error: string, epoch: number): void => {
     if (epoch !== aiEpoch) return;
     console.error("AI failed to calculate a move:", error);
     cancelAiWork();
+    store.aiError = error;
     emit();
 };
 
 export const notifyWorkerCrash = (): void => {
     console.error("AI worker crashed unexpectedly");
     cancelAiWork();
+    store.aiError = "AI worker crashed unexpectedly";
     emit();
 };

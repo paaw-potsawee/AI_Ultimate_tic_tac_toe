@@ -38,7 +38,10 @@ const dfs = (
     state: GameState,
     depth: number,
     context: SearchContext,
+    stackDepth: number,
+    peak: { value: number },
 ): number => {
+    if (stackDepth > peak.value) peak.value = stackDepth;
     visitNode(context);
     // only calculate score when hit terminal state (leaf or depth limit)
     // borrow scoring system from heuristic search to help evaluate this state
@@ -68,7 +71,13 @@ const dfs = (
         const boardIdx = Math.floor(move / BOARD_CELL_COUNT);
         const cellIdx = move % BOARD_CELL_COUNT;
         const nextState = applyMove(state, boardIdx, cellIdx);
-        const currentScore = dfs(nextState, depth - 1, context);
+        const currentScore = dfs(
+            nextState,
+            depth - 1,
+            context,
+            stackDepth + 1,
+            peak,
+        );
         bestScore = minimaxScore(state.player, bestScore, currentScore);
     });
     context.table.set(key, {
@@ -84,7 +93,7 @@ const dfs = (
 export const evaluateDFS = (state: GameState, depth: number): SearchResult => {
     const availableMoves = getAvailableMoves(state);
     if (availableMoves.length === 0) {
-        return { move: null, nodes: 0 };
+        return { move: null, nodes: 0, peakFrontier: 0, tableSize: 0 };
     }
 
     let bestMove: number | null = null;
@@ -94,6 +103,8 @@ export const evaluateDFS = (state: GameState, depth: number): SearchResult => {
         nodes: 0,
         table: new BoundedTranspositionTable(),
     };
+    // Peak live stack depth (frames are freed on return, unlike `nodes`).
+    const peak = { value: 1 };
     for (let i = 0; i < depth; i++) {
         if (performance.now() >= context.deadline) break;
         let bestScore = state.player === 0 ? -Infinity : Infinity;
@@ -103,7 +114,7 @@ export const evaluateDFS = (state: GameState, depth: number): SearchResult => {
                 const boardIdx = Math.floor(move / BOARD_CELL_COUNT);
                 const cellIdx = move % BOARD_CELL_COUNT;
                 const nextState = applyMove(state, boardIdx, cellIdx);
-                const score = dfs(nextState, i, context);
+                const score = dfs(nextState, i, context, 1, peak);
                 if (minimaxComp(state.player, bestScore, score)) {
                     bestLocalMove = move;
                 }
@@ -111,7 +122,12 @@ export const evaluateDFS = (state: GameState, depth: number): SearchResult => {
                     (state.player === 0 && score >= WIN_SCORE) ||
                     (state.player === 1 && score <= -WIN_SCORE)
                 )
-                    return { move: bestLocalMove, nodes: context.nodes };
+                    return {
+                        move: bestLocalMove,
+                        nodes: context.nodes,
+                        peakFrontier: peak.value,
+                        tableSize: context.table.size,
+                    };
                 bestScore = minimaxScore(state.player, bestScore, score);
             }
         } catch (error) {
@@ -120,5 +136,10 @@ export const evaluateDFS = (state: GameState, depth: number): SearchResult => {
         }
         bestMove = bestLocalMove;
     }
-    return { move: bestMove ?? availableMoves[0], nodes: context.nodes };
+    return {
+        move: bestMove ?? availableMoves[0],
+        nodes: context.nodes,
+        peakFrontier: peak.value,
+        tableSize: context.table.size,
+    };
 };

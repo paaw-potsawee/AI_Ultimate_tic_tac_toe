@@ -6,6 +6,7 @@ import {
     GameControls,
     MoveHistory,
     AiVsAiSummary,
+    AiErrorNotice,
     useGameConfigStore,
 } from "@/features/board";
 import { useAiWorker } from "@/features/ai";
@@ -63,6 +64,7 @@ function App() {
                     <UltimateBoard />
                     <aside className="flex w-full max-w-[40.75rem] min-w-0 flex-col gap-2 lg:h-[min(40.75rem,calc(100dvh-8.5rem))] lg:max-w-none">
                         <GameStatus />
+                        <AiErrorNotice />
                         <PlayerInfo />
                         <AiVsAiSummary />
                         <GameControls

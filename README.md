@@ -18,11 +18,24 @@ With branching factors up to 81 and game lengths often exceeding 50 turns, the g
 ## Game Modes
 
 - **Local Player vs Player**: Two players alternating turns locally.
-- **Player vs AI**: Play against any search engine with side selection (X or O).
+- **Player vs AI**: Play against any search engine with side selection (X or O). When you play O, the AI opens the game.
     - **The Blind (BFS)**: Goal-oriented Breadth-First Search seeking the shallowest winning line.
     - **The Blind (DFS)**: Iterative Deepening Depth-First Search with full Minimax alternation.
     - **The Heuristic**: Iterative Deepening Minimax with Alpha-Beta pruning, move ordering, and board evaluation.
-- **AI vs AI**: Spectator mode pitting any two search engines against each other.
+- **AI vs AI**: Spectator mode pitting any two search engines against each other, with a post-game search performance summary (average time and nodes explored per turn for each engine).
+
+Every engine searches under the same **1-second per-move time budget**, so an AI reply can take up to about one second regardless of the engine chosen.
+
+---
+
+## In-Game Tools
+
+- **Move History**: Every move is logged with its board and cell coordinates, newest first.
+- **Board Review**: Click any entry in the Move History to see the board exactly as it was right after that move. The review is read-only — cells are disabled, the reviewed move is highlighted, and the local board the opponent was sent to is outlined. A `Viewing move N` banner with **Back to live** returns to the current position; the live game (including a running AI vs AI match) keeps going underneath.
+- **Pause / Resume** (AI vs AI): Pause stops the match immediately, cancelling any search in progress; Resume lets the side to move think again.
+- **Undo** (Player vs Player and Player vs AI): Takes back the last move. Against an AI it also removes the AI's reply so it is your turn again, and it stays disabled until you have made a move of your own.
+- **Reset** and **Main Menu**: Restart the current match or return to mode selection.
+- **AI error recovery**: If an engine fails to produce a move, a notice shows the error with a **Retry** button instead of leaving the game stuck.
 
 ---
 
@@ -41,6 +54,7 @@ src/
 
 tests/
 ├── benchmark/        # Automated AI vs AI matchup runner and metric collector
+├── components/       # React component tests (board, controls, move history)
 └── lib/ & store/     # Unit and integration test suites
 ```
 
@@ -98,17 +112,28 @@ Access the production application at `http://localhost:3000`.
 
 ## Available Scripts
 
-| Command             | Description                                                      |
-| ------------------- | ---------------------------------------------------------------- |
-| `bun run dev`       | Starts local development server with Vite                        |
-| `bun run build`     | Type-checks and builds production bundle                         |
-| `bun run test`      | Executes full Vitest regression test suite                       |
-| `bun run lint`      | Lints codebase with Oxlint                                       |
-| `bun run format`    | Formats code using Prettier and Tailwind plugin                  |
-| `bun run benchmark` | Runs all 9 AI matchup pairings and generates performance metrics |
-| `bun run preview`   | Serves local production build preview                            |
+| Command             | Description                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------- |
+| `bun run dev`       | Starts local development server with Vite                                                   |
+| `bun run build`     | Type-checks and builds production bundle                                                    |
+| `bun run test`      | Executes full Vitest regression test suite                                                  |
+| `bun run lint`      | Lints codebase with Oxlint                                                                  |
+| `bun run format`    | Formats code using Prettier and Tailwind plugin                                             |
+| `bun run benchmark` | Runs all 9 AI matchup pairings and generates performance metrics (requires Bun — see below) |
+| `bun run preview`   | Serves local production build preview                                                       |
 
-_(All scripts can also be run with `npm run <command>`)_
+_(All scripts can also be run with `npm run <command>`, except `benchmark`, whose script invokes the `bun` binary directly.)_
+
+#### Benchmark runner (Bun only)
+
+The benchmark executes TypeScript directly and uses Bun/Node process APIs (`process.memoryUsage()`, `--expose-gc`), so it cannot run with plain `npm`/`node`:
+
+```shell
+bun --expose-gc tests/benchmark/run.ts
+# (or bun run benchmark — same thing without the GC flag)
+```
+
+`npm run benchmark` only works if the `bun` binary is installed and on `PATH`. Without `--expose-gc`, per-turn GC settling is skipped and `heapDeltaKb` figures get noisier (algorithmic peaks are unaffected).
 
 ---
 

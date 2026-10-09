@@ -20,7 +20,10 @@ const minimax = (
     alpha: number,
     beta: number,
     context: SearchContext,
+    stackDepth: number,
+    peak: { value: number },
 ): number => {
+    if (stackDepth > peak.value) peak.value = stackDepth;
     visitNode(context);
 
     const terminalScore = getTerminalScore(checkGameWinner(state), depth);
@@ -57,7 +60,15 @@ const minimax = (
     let bestMove: number | null = null;
 
     for (const candidate of orderedMoves) {
-        const value = minimax(candidate.state, depth - 1, alpha, beta, context);
+        const value = minimax(
+            candidate.state,
+            depth - 1,
+            alpha,
+            beta,
+            context,
+            stackDepth + 1,
+            peak,
+        );
 
         if (
             bestMove === null ||
@@ -92,6 +103,7 @@ const searchAtDepth = (
     depth: number,
     preferredMove: number | null,
     context: SearchContext,
+    peak: { value: number },
 ): DepthSearchResult => {
     const isMaximizing = state.player === 1;
     const orderedMoves = getOrderedMoves(state, legalMoves, preferredMove, () =>
@@ -104,7 +116,15 @@ const searchAtDepth = (
 
     for (const candidate of orderedMoves) {
         enforceDeadline(context);
-        const value = minimax(candidate.state, depth - 1, alpha, beta, context);
+        const value = minimax(
+            candidate.state,
+            depth - 1,
+            alpha,
+            beta,
+            context,
+            1,
+            peak,
+        );
 
         if (isMaximizing ? value > bestValue : value < bestValue) {
             bestValue = value;
@@ -119,12 +139,19 @@ const searchAtDepth = (
 };
 
 export const evaluateHeuristic = (state: GameState): SearchResult => {
-    if (checkGameWinner(state) !== null) return { move: null, nodes: 0 };
+    if (checkGameWinner(state) !== null)
+        return { move: null, nodes: 0, peakFrontier: 0, tableSize: 0 };
 
     const availableMoves = getAvailableMoves(state);
-    if (availableMoves.length === 0) return { move: null, nodes: 0 };
+    if (availableMoves.length === 0)
+        return { move: null, nodes: 0, peakFrontier: 0, tableSize: 0 };
     if (availableMoves.length === 1)
-        return { move: availableMoves[0], nodes: 0 };
+        return {
+            move: availableMoves[0],
+            nodes: 0,
+            peakFrontier: 1,
+            tableSize: 0,
+        };
 
     const deadline = performance.now() + TIME_BUDGET_MS;
     const fallbackMove = getOrderedMoves(state, availableMoves)[0].move;
@@ -133,6 +160,7 @@ export const evaluateHeuristic = (state: GameState): SearchResult => {
         nodes: 0,
         table: new BoundedTranspositionTable(),
     };
+    const peak = { value: 1 };
     let bestMove = fallbackMove;
     let preferredMove: number | null = null;
 
@@ -146,6 +174,7 @@ export const evaluateHeuristic = (state: GameState): SearchResult => {
                 depth,
                 preferredMove,
                 context,
+                peak,
             );
             bestMove = result.move;
             preferredMove = result.move;
@@ -160,5 +189,10 @@ export const evaluateHeuristic = (state: GameState): SearchResult => {
     const chosenMove = availableMoves.includes(bestMove)
         ? bestMove
         : fallbackMove;
-    return { move: chosenMove, nodes: context.nodes };
+    return {
+        move: chosenMove,
+        nodes: context.nodes,
+        peakFrontier: peak.value,
+        tableSize: context.table.size,
+    };
 };
