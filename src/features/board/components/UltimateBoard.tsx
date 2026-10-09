@@ -63,51 +63,56 @@ const UltimateBoard = () => {
             }
             className={cn(
                 "relative w-[min(100%,40.75rem,calc(100dvh-8.5rem))] shrink-0 justify-self-center border-4 bg-orange p-1 transition-colors sm:p-2",
-                review ? "border-burgundy" : "border-black",
+                // Reserve room inside the frame for the review banner so it
+                // never overlaps the cells or the panels below the board.
+                review ? "border-burgundy pb-12" : "border-black",
             )}
         >
-            <svg
-                className="pointer-events-none absolute inset-0 h-full w-full"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                xmlns="http://www.w3.org/2000/svg"
-            >
-                {GRID_LINES.map(({ key, x1, y1, x2, y2 }) => (
-                    <line
-                        key={key}
-                        x1={x1}
-                        y1={y1}
-                        x2={x2}
-                        y2={y2}
-                        stroke="#e9d8a6"
-                        strokeWidth="1.5"
-                    />
-                ))}
-            </svg>
-
-            <div className="relative grid grid-cols-3 gap-1 sm:gap-2">
-                {shownBoard.map((rowBoards, row) =>
-                    rowBoards.map((_, col) => (
-                        <LocalBoard
-                            key={`${row}-${col}`}
-                            localRow={row}
-                            localCol={col}
+            {/* The grid lines are drawn relative to the board grid, not the frame. */}
+            <div className="relative">
+                <svg
+                    className="pointer-events-none absolute inset-0 h-full w-full"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    {GRID_LINES.map(({ key, x1, y1, x2, y2 }) => (
+                        <line
+                            key={key}
+                            x1={x1}
+                            y1={y1}
+                            x2={x2}
+                            y2={y2}
+                            stroke="#e9d8a6"
+                            strokeWidth="1.5"
                         />
-                    )),
+                    ))}
+                </svg>
+
+                <div className="relative grid grid-cols-3 gap-1 sm:gap-2">
+                    {shownBoard.map((rowBoards, row) =>
+                        rowBoards.map((_, col) => (
+                            <LocalBoard
+                                key={`${row}-${col}`}
+                                localRow={row}
+                                localCol={col}
+                            />
+                        )),
+                    )}
+                </div>
+
+                {shownWinningLine && (
+                    <WinningSlash
+                        line={shownWinningLine.line}
+                        strokeWidth={8}
+                        strokeColor="#000000"
+                        className="z-30"
+                    />
                 )}
             </div>
 
-            {shownWinningLine && (
-                <WinningSlash
-                    line={shownWinningLine.line}
-                    strokeWidth={8}
-                    strokeColor="#000000"
-                    className="z-30"
-                />
-            )}
-
             {review && (
-                <div className="absolute -bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 border-2 border-black bg-burgundy py-1 pr-1 pl-3 text-[11px] font-black tracking-wider text-white uppercase shadow-[3px_3px_0_#000]">
+                <div className="absolute bottom-1.5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 border-2 border-black bg-burgundy py-1 pr-1 pl-3 text-[11px] font-black tracking-wider text-white uppercase shadow-[3px_3px_0_#000] sm:bottom-2">
                     <span className="whitespace-nowrap">
                         Viewing move {review.moveNumber}
                     </span>

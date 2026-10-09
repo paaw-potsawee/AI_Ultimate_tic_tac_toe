@@ -36,6 +36,17 @@ const oPosition = {
     cellCol: 1,
 };
 
+const storeState = (overrides: Record<string, unknown> = {}) => ({
+    board: createBoard(),
+    handleCellClick: vi.fn(),
+    history: [],
+    isAiTurn: false,
+    review: null,
+    availableLocalBoards: [],
+    canHumanMove: false,
+    ...overrides,
+});
+
 describe("Cell last-move indicator", () => {
     beforeEach(() => {
         useBoardStoreMock.mockReset();
@@ -52,13 +63,9 @@ describe("Cell last-move indicator", () => {
         const oMove = { ...oPosition, player: 1, board: 5, cell: 7 };
         let history = [xMove, oMove];
 
-        useBoardStoreMock.mockImplementation(() => ({
-            board,
-            handleCellClick: vi.fn(),
-            history,
-            isAiTurn: false,
-            review: null,
-        }));
+        useBoardStoreMock.mockImplementation(() =>
+            storeState({ board, history }),
+        );
 
         const view = render(
             <>
@@ -109,18 +116,19 @@ describe("Cell while reviewing a past move", () => {
         const oMove = { ...oPosition, player: 1, board: 5, cell: 7 };
         const handleCellClick = vi.fn();
 
-        useBoardStoreMock.mockReturnValue({
-            board: liveBoard,
-            handleCellClick,
-            history: [xMove, oMove],
-            isAiTurn: false,
-            review: {
-                moveIndex: 0,
-                moveNumber: 1,
-                move: xMove,
-                board: reviewBoard,
-            },
-        });
+        useBoardStoreMock.mockReturnValue(
+            storeState({
+                board: liveBoard,
+                handleCellClick,
+                history: [xMove, oMove],
+                review: {
+                    moveIndex: 0,
+                    moveNumber: 1,
+                    move: xMove,
+                    board: reviewBoard,
+                },
+            }),
+        );
 
         render(
             <>
@@ -143,5 +151,77 @@ describe("Cell while reviewing a past move", () => {
 
         fireEvent.click(oCell);
         expect(handleCellClick).not.toHaveBeenCalled();
+    });
+});
+
+describe("Cell hover affordance", () => {
+    beforeEach(() => {
+        useBoardStoreMock.mockReset();
+    });
+
+    afterEach(cleanup);
+
+    const classesOf = (name: RegExp) =>
+        screen.getByRole("button", { name }).className.split(" ");
+
+    it("only invites clicks on empty cells of a board the rules allow", () => {
+        const board = createBoard();
+        board[0][0].board[0][0] = "X";
+
+        useBoardStoreMock.mockReturnValue(
+            storeState({
+                board,
+                history: [{ ...xPosition, player: 0, board: 0, cell: 0 }],
+                canHumanMove: true,
+                // Only the top-left board is open for the next move.
+                availableLocalBoards: [
+                    { localRow: 0, localCol: 0, cellRow: 0, cellCol: 0 },
+                ],
+            }),
+        );
+
+        render(
+            <>
+                <Cell cellClickProps={xPosition} />
+                <Cell
+                    cellClickProps={{
+                        localRow: 0,
+                        localCol: 0,
+                        cellRow: 0,
+                        cellCol: 1,
+                    }}
+                />
+                <Cell cellClickProps={oPosition} />
+            </>,
+        );
+
+        const playable = classesOf(/cell row 1, column 2: empty/);
+        expect(playable).toContain("hover:bg-sunset-400");
+        expect(playable).toContain("cursor-pointer");
+
+        const occupied = classesOf(/cell row 1, column 1: X/);
+        expect(occupied).not.toContain("hover:bg-sunset-400");
+        expect(occupied).toContain("cursor-default");
+
+        const wrongBoard = classesOf(/Board row 2, column 3.*: empty/);
+        expect(wrongBoard).not.toContain("hover:bg-sunset-400");
+        expect(wrongBoard).toContain("cursor-default");
+    });
+
+    it("drops the affordance when it is not the human's turn", () => {
+        useBoardStoreMock.mockReturnValue(
+            storeState({
+                canHumanMove: false,
+                availableLocalBoards: [
+                    { localRow: 0, localCol: 0, cellRow: 0, cellCol: 0 },
+                ],
+            }),
+        );
+
+        render(<Cell cellClickProps={xPosition} />);
+
+        const classes = classesOf(/cell row 1, column 1: empty/);
+        expect(classes).not.toContain("hover:bg-sunset-400");
+        expect(classes).toContain("cursor-default");
     });
 });

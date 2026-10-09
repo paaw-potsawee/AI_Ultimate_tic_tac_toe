@@ -21,6 +21,12 @@ import {
     store,
 } from "./boardStoreState";
 
+/** True when the side to move is controlled by an AI engine. */
+const isAiToMove = (): boolean =>
+    store.option === GameMode.AIVAI ||
+    (store.option !== GameMode.PVP &&
+        store.currentPlayer !== store.humanPlayer);
+
 const resetState = (): void => {
     cancelAiWork();
     store.state = {
@@ -36,6 +42,7 @@ const resetState = (): void => {
     store.history = [];
     store.isAiTurn = false;
     store.isPaused = false;
+    store.aiError = null;
     clearReview();
     resetAiStats();
     refreshSnapshots();
@@ -62,6 +69,7 @@ export const startGame = (
 export const leaveGame = (): void => {
     cancelAiWork();
     store.isPaused = false;
+    store.aiError = null;
     clearReview();
     emit();
 };
@@ -86,6 +94,12 @@ export const togglePause = (): void => {
     emit();
 };
 
+/** Asks the AI for a move again after a failed attempt left it idle. */
+export const retryAiMove = (): void => {
+    if (store.winner !== null || store.isAiTurn || !isAiToMove()) return;
+    doAiMove();
+};
+
 export const handleCellClick = ({
     localRow,
     localCol,
@@ -96,7 +110,7 @@ export const handleCellClick = ({
         store.winner !== null ||
         store.isAiTurn ||
         store.reviewSnapshot !== null ||
-        store.option === GameMode.AIVAI
+        isAiToMove()
     ) {
         return;
     }
@@ -138,29 +152,37 @@ export const handleCellClick = ({
 export const back = (): void => {
     if (store.history.length === 0) return;
 
-    if (store.isAiTurn) {
-        cancelAiWork();
-        const result = gameBack(store.state, store.history);
+    if (store.isAiTurn || store.option === GameMode.AIVAI) cancelAiWork();
+
+    let result = gameBack(store.state, store.history);
+    store.state = result.state;
+    store.history = result.history;
+
+    // Against an AI, keep unwinding until it is the human's turn again so one
+    // Undo removes the AI reply together with the human move. When the last
+    // move was the human's own (the AI never replied), a single step is enough.
+    if (
+        store.option !== GameMode.PVP &&
+        store.option !== GameMode.AIVAI &&
+        store.history.length > 0 &&
+        store.state.player !== store.humanPlayer
+    ) {
+        result = gameBack(store.state, store.history);
         store.state = result.state;
         store.history = result.history;
-    } else {
-        if (store.option === GameMode.AIVAI) cancelAiWork();
-
-        let result = gameBack(store.state, store.history);
-        store.state = result.state;
-        store.history = result.history;
-
-        if (store.option !== GameMode.PVP && store.history.length > 0) {
-            result = gameBack(store.state, store.history);
-            store.state = result.state;
-            store.history = result.history;
-        }
     }
 
     store.currentPlayer = store.state.player;
     store.winner = checkGameWinner(store.state);
     store.isAiTurn = false;
+    store.aiError = null;
     syncReviewWithHistory();
     refreshSnapshots();
     emit();
+
+    // If the undo landed on the AI's turn (for example the AI opened the game
+    // and its only move was undone), ask it to move instead of idling.
+    if (store.winner === null && isAiToMove()) {
+        startAiTurn(store.option === GameMode.AIVAI);
+    }
 };

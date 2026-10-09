@@ -1,10 +1,12 @@
 import { useSyncExternalStore } from "react";
+import { GameMode } from "@/types/gameMode";
 import { store, listeners, optionListeners } from "./boardStoreState";
 import {
     back,
     clearBoard,
     handleCellClick,
     leaveGame,
+    retryAiMove,
     startGame,
     togglePause,
 } from "./boardStoreController";
@@ -54,6 +56,23 @@ export const useBoardStore = () => {
         },
         () => store.reviewSnapshot,
     );
+    const aiError = useSyncExternalStore(
+        (listener) => {
+            listeners.add(listener);
+            return () => listeners.delete(listener);
+        },
+        () => store.aiError,
+    );
+
+    // True when a click on an empty, reachable cell would place a mark right
+    // now: the game is live, it is a human side's turn and nothing is pending.
+    const canHumanMove =
+        store.winner === null &&
+        !isAiTurn &&
+        review === null &&
+        store.option !== GameMode.AIVAI &&
+        (store.option === GameMode.PVP ||
+            store.currentPlayer === store.humanPlayer);
 
     return {
         board,
@@ -72,6 +91,9 @@ export const useBoardStore = () => {
         review,
         reviewMove,
         exitReview,
+        aiError,
+        retryAiMove,
+        canHumanMove,
     };
 };
 

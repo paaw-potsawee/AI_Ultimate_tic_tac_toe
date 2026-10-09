@@ -68,6 +68,7 @@ const MoveHistory = () => {
                                           : "bg-white/65 hover:bg-white",
                                 )}
                             >
+                                {/* Only phrasing content (spans) may live inside a button. */}
                                 <button
                                     type="button"
                                     aria-pressed={isViewing}
@@ -83,8 +84,8 @@ const MoveHistory = () => {
                                     }
                                     className="block w-full p-2 text-left"
                                 >
-                                    <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2">
+                                    <span className="flex items-center justify-between gap-2">
+                                        <span className="flex items-center gap-2">
                                             <span
                                                 aria-label={`Player ${player}`}
                                                 className={cn(
@@ -99,8 +100,8 @@ const MoveHistory = () => {
                                             <span className="text-sm font-black tracking-wide">
                                                 MOVE {moveNumber}
                                             </span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
+                                        </span>
+                                        <span className="flex items-center gap-1">
                                             {isViewing && (
                                                 <span className="bg-burgundy px-2 py-0.5 text-[10px] font-black tracking-wider text-white uppercase">
                                                     Viewing
@@ -111,35 +112,35 @@ const MoveHistory = () => {
                                                     Latest
                                                 </span>
                                             )}
-                                        </div>
-                                    </div>
+                                        </span>
+                                    </span>
 
-                                    <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                                        <div className="border border-black/30 bg-peach/45 px-2 py-1">
-                                            <div className="text-[10px] font-black tracking-wider uppercase">
+                                    <span className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                                        <span className="block border border-black/30 bg-peach/45 px-2 py-1">
+                                            <span className="block text-[10px] font-black tracking-wider uppercase">
                                                 Board
-                                            </div>
-                                            <div className="text-xs font-semibold whitespace-nowrap">
+                                            </span>
+                                            <span className="block text-xs font-semibold whitespace-nowrap">
                                                 ROW {move.localRow + 1} · COL{" "}
                                                 {move.localCol + 1}
-                                            </div>
-                                        </div>
+                                            </span>
+                                        </span>
                                         <span
                                             aria-hidden="true"
                                             className="text-base font-black"
                                         >
                                             →
                                         </span>
-                                        <div className="border border-black/30 bg-ocean-400/45 px-2 py-1">
-                                            <div className="text-[10px] font-black tracking-wider uppercase">
+                                        <span className="block border border-black/30 bg-ocean-400/45 px-2 py-1">
+                                            <span className="block text-[10px] font-black tracking-wider uppercase">
                                                 Cell
-                                            </div>
-                                            <div className="text-xs font-semibold whitespace-nowrap">
+                                            </span>
+                                            <span className="block text-xs font-semibold whitespace-nowrap">
                                                 ROW {move.cellRow + 1} · COL{" "}
                                                 {move.cellCol + 1}
-                                            </div>
-                                        </div>
-                                    </div>
+                                            </span>
+                                        </span>
+                                    </span>
                                 </button>
                             </li>
                         );

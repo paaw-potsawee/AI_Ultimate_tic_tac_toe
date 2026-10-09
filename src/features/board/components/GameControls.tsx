@@ -8,10 +8,17 @@ interface Props {
 }
 
 const GameControls = ({ onBackToSetup }: Props) => {
-    const { back, clearBoard, isPaused, togglePause, winner } = useBoardStore();
-    const { leaveGame, mode } = useGameConfigStore();
+    const { back, clearBoard, isPaused, togglePause, winner, history } =
+        useBoardStore();
+    const { leaveGame, mode, humanPlayer } = useGameConfigStore();
     const isAiVsAi = mode === GameMode.AIVAI;
     const isGameOver = winner !== null;
+    // Against an AI, only the human's own moves can be taken back; undoing the
+    // AI's opening move would just make it play the opening again.
+    const canUndo =
+        mode === GameMode.PVP
+            ? history.length > 0
+            : history.some((move) => move.player === humanPlayer);
 
     const handleBackToSetup = () => {
         leaveGame();
@@ -37,7 +44,11 @@ const GameControls = ({ onBackToSetup }: Props) => {
                 </Button>
             ) : (
                 <Button
-                    className="min-h-11 border-0 bg-ocean-200 px-2 py-2 text-sm font-bold text-teal sm:px-4 sm:text-base"
+                    disabled={!canUndo}
+                    className={cn(
+                        "min-h-11 border-0 bg-ocean-200 px-2 py-2 text-sm font-bold text-teal sm:px-4 sm:text-base",
+                        !canUndo && "cursor-not-allowed opacity-50",
+                    )}
                     onClick={back}
                 >
                     Undo

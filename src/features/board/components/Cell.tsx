@@ -9,8 +9,15 @@ interface CellProps {
 }
 
 const Cell = ({ cellClickProps }: CellProps) => {
-    const { board, handleCellClick, history, isAiTurn, review } =
-        useBoardStore();
+    const {
+        board,
+        handleCellClick,
+        history,
+        isAiTurn,
+        review,
+        availableLocalBoards,
+        canHumanMove,
+    } = useBoardStore();
     const { localRow, localCol, cellRow, cellCol } = cellClickProps;
     // While reviewing a past move the cell shows that position, read-only.
     const shownBoard = review ? review.board : board;
@@ -21,6 +28,14 @@ const Cell = ({ cellClickProps }: CellProps) => {
         lastMove.localCol === localCol &&
         lastMove.cellRow === cellRow &&
         lastMove.cellCol === cellCol;
+    // Only an empty cell inside a board the rules currently allow can take a
+    // mark, so only those cells get the hover highlight and pointer cursor.
+    const isPlayable =
+        Boolean(canHumanMove) &&
+        !value &&
+        availableLocalBoards.some(
+            (b) => b.localRow === localRow && b.localCol === localCol,
+        );
     const positionLabel = `Board row ${localRow + 1}, column ${localCol + 1}; cell row ${cellRow + 1}, column ${cellCol + 1}`;
     const lastMoveLabel = review ? `move ${review.moveNumber}` : "last move";
 
@@ -35,11 +50,10 @@ const Cell = ({ cellClickProps }: CellProps) => {
             }
             className={cn(
                 "relative flex aspect-square w-full min-w-0 items-center justify-center bg-orange p-0 transition-colors",
-                review
-                    ? "cursor-default"
-                    : isAiTurn
-                      ? "cursor-not-allowed opacity-70"
-                      : !value && "hover:bg-sunset-400",
+                isPlayable
+                    ? "cursor-pointer hover:bg-sunset-400"
+                    : "cursor-default",
+                isAiTurn && !review && "cursor-not-allowed opacity-70",
                 isLastMove &&
                     (value === "X"
                         ? "bg-sunset-400/55 shadow-[inset_0_0_0_2px_rgba(174,32,18,0.5)]"

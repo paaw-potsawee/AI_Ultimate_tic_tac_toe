@@ -1,3 +1,4 @@
+export { default as AiErrorNotice } from "./components/AiErrorNotice";
 export { default as AiVsAiSummary } from "./components/AiVsAiSummary";
 export { default as Cell } from "./components/Cell";
 export { default as GameControls } from "./components/GameControls";
