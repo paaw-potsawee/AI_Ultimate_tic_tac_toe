@@ -42,6 +42,11 @@ interface TurnStat {
     player: 0 | 1;
     nodes: number;
     durationMs: number;
+    // Max live states at once + table entries held (see README glossary).
+    peakFrontier: number;
+    tableSize: number;
+    // heapUsed after minus before the search, in kB (GC-noisy).
+    heapDeltaKb: number;
 }
 
 interface GameOutcome {
@@ -55,16 +60,31 @@ interface PlayerSummary {
     avgNodesPerTurn: number;
     avgMsPerTurn: number;
     totalTurns: number;
+    avgPeakFrontier: number;
+    maxPeakFrontier: number;
+    avgTableSize: number;
+    avgHeapDeltaKb: number;
+    maxHeapDeltaKb: number;
+}
+
+interface GameWinner {
+    game: number;
+    winner: string;
+    totalTurns: number;
 }
 
 interface MatchupResult {
     matchup: string;
+    xAlgo: AlgorithmName;
+    oAlgo: AlgorithmName;
     gamesPlayed: number;
     wins: {
         x: number;
         o: number;
         draw: number;
     };
+    games: GameWinner[];
+    turnStats: TurnStat[];
     summary: Record<string, PlayerSummary>;
 }
 
@@ -78,9 +98,13 @@ const runGame = (
 
     while (winner === null) {
         const algo = state.player === 0 ? xAlgo : oAlgo;
+        // GC settle needs `bun --expose-gc`; otherwise a no-op.
+        (globalThis as { gc?: () => void }).gc?.();
+        const heapBefore = process.memoryUsage().heapUsed;
         const start = performance.now();
-        const { move, nodes } = algo(state);
+        const { move, nodes, peakFrontier, tableSize } = algo(state);
         const durationMs = performance.now() - start;
+        const heapAfter = process.memoryUsage().heapUsed;
 
         if (move === null) break;
 
@@ -89,6 +113,11 @@ const runGame = (
             player: state.player,
             nodes,
             durationMs,
+            peakFrontier,
+            tableSize,
+            heapDeltaKb: Number(
+                ((heapAfter - heapBefore) / 1024).toFixed(2),
+            ),
         });
 
         const boardIdx = Math.floor(move / BOARD_CELL_COUNT);
@@ -104,6 +133,38 @@ const runGame = (
     };
 };
 
+const summarizeTurns = (turns: TurnStat[]): PlayerSummary => {
+    const totalNodes = turns.reduce((sum, t) => sum + t.nodes, 0);
+    const totalMs = turns.reduce((sum, t) => sum + t.durationMs, 0);
+    const totalPeak = turns.reduce((sum, t) => sum + t.peakFrontier, 0);
+    const totalTable = turns.reduce((sum, t) => sum + t.tableSize, 0);
+    const totalHeap = turns.reduce((sum, t) => sum + t.heapDeltaKb, 0);
+    return {
+        totalNodes,
+        avgNodesPerTurn:
+            turns.length > 0 ? Math.round(totalNodes / turns.length) : 0,
+        avgMsPerTurn:
+            turns.length > 0 ? Number((totalMs / turns.length).toFixed(2)) : 0,
+        totalTurns: turns.length,
+        avgPeakFrontier:
+            turns.length > 0 ? Math.round(totalPeak / turns.length) : 0,
+        maxPeakFrontier:
+            turns.length > 0
+                ? Math.max(...turns.map((t) => t.peakFrontier))
+                : 0,
+        avgTableSize:
+            turns.length > 0 ? Math.round(totalTable / turns.length) : 0,
+        avgHeapDeltaKb:
+            turns.length > 0
+                ? Number((totalHeap / turns.length).toFixed(2))
+                : 0,
+        maxHeapDeltaKb:
+            turns.length > 0
+                ? Math.max(...turns.map((t) => t.heapDeltaKb))
+                : 0,
+    };
+};
+
 const runMatchup = (
     xName: AlgorithmName,
     oName: AlgorithmName,
@@ -111,46 +172,46 @@ const runMatchup = (
 ): MatchupResult => {
     const allTurnStats: TurnStat[] = [];
     const wins = { x: 0, o: 0, draw: 0 };
+    const games: GameWinner[] = [];
 
     for (let gameIndex = 0; gameIndex < gamesCount; gameIndex += 1) {
         const outcome = runGame(ALGORITHMS[xName], ALGORITHMS[oName]);
         allTurnStats.push(...outcome.turnStats);
 
-        if (outcome.winner === 0) wins.x += 1;
-        else if (outcome.winner === 1) wins.o += 1;
-        else wins.draw += 1;
+        let winnerLabel: string;
+        if (outcome.winner === 0) {
+            wins.x += 1;
+            winnerLabel = `X (${xName})`;
+        } else if (outcome.winner === 1) {
+            wins.o += 1;
+            winnerLabel = `O (${oName})`;
+        } else {
+            wins.draw += 1;
+            winnerLabel = "Draw";
+        }
+        games.push({
+            game: gameIndex + 1,
+            winner: winnerLabel,
+            totalTurns: outcome.totalTurns,
+        });
     }
 
     const summary: Record<string, PlayerSummary> = {};
-
-    const xTurns = allTurnStats.filter((t) => t.player === 0);
-    const xNodes = xTurns.reduce((sum, t) => sum + t.nodes, 0);
-    const xMs = xTurns.reduce((sum, t) => sum + t.durationMs, 0);
-    summary[`${xName} (as X)`] = {
-        totalNodes: xNodes,
-        avgNodesPerTurn:
-            xTurns.length > 0 ? Math.round(xNodes / xTurns.length) : 0,
-        avgMsPerTurn:
-            xTurns.length > 0 ? Number((xMs / xTurns.length).toFixed(2)) : 0,
-        totalTurns: xTurns.length,
-    };
-
-    const oTurns = allTurnStats.filter((t) => t.player === 1);
-    const oNodes = oTurns.reduce((sum, t) => sum + t.nodes, 0);
-    const oMs = oTurns.reduce((sum, t) => sum + t.durationMs, 0);
-    summary[`${oName} (as O)`] = {
-        totalNodes: oNodes,
-        avgNodesPerTurn:
-            oTurns.length > 0 ? Math.round(oNodes / oTurns.length) : 0,
-        avgMsPerTurn:
-            oTurns.length > 0 ? Number((oMs / oTurns.length).toFixed(2)) : 0,
-        totalTurns: oTurns.length,
-    };
+    summary[`${xName} (as X)`] = summarizeTurns(
+        allTurnStats.filter((t) => t.player === 0),
+    );
+    summary[`${oName} (as O)`] = summarizeTurns(
+        allTurnStats.filter((t) => t.player === 1),
+    );
 
     return {
         matchup: `${xName} (X) vs ${oName} (O)`,
+        xAlgo: xName,
+        oAlgo: oName,
         gamesPlayed: gamesCount,
         wins,
+        games,
+        turnStats: allTurnStats,
         summary,
     };
 };
@@ -168,8 +229,15 @@ const main = async (): Promise<void> => {
         results.push(result);
 
         console.table(result.summary);
+        for (const game of result.games) {
+            console.log(
+                game.winner === "Draw"
+                    ? `  Game ${game.game}: Draw in ${game.totalTurns} turns`
+                    : `  Game ${game.game}: ${game.winner} wins in ${game.totalTurns} turns`,
+            );
+        }
         console.log(
-            `Result: ${xName} wins ${result.wins.x}, ${oName} wins ${result.wins.o}, Draws: ${result.wins.draw}\n`,
+            `Result: X (${xName}) ${result.wins.x} win(s), O (${oName}) ${result.wins.o} win(s), Draws: ${result.wins.draw}\n`,
         );
     }
 

@@ -76,7 +76,8 @@ describe("evaluateHeuristic", () => {
     it("returns its legal fallback when the deadline is already exhausted", () => {
         let callCount = 0;
         vi.spyOn(performance, "now").mockImplementation(() =>
-            callCount++ === 0 ? 0 : 901,
+            // Far-future timestamp exhausts the deadline for any budget.
+            callCount++ === 0 ? 0 : 10_000_000,
         );
         const state = getUltimateBoard();
         const legalMoves = getAvailableMoves(state);

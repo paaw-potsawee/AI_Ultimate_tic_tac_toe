@@ -119,38 +119,59 @@ At depth 0 (leaf nodes that are not terminal), the board position is scored usin
 | **Memory**          | $O(b^d)$ — entire frontier in queue              | $O(d)$ — call stack only                   | $O(d)$ — call stack + bounded TT                    |
 | **Key weakness**    | Exponential memory; non-adversarial evaluation   | Slower at equal depth vs. Alpha-Beta       | Requires a well-tuned evaluation function           |
 
-### Benchmark Results (depth 10, 2 games per matchup)
+### Benchmark Results (BFS/DFS depth 10, Heuristic IDDFS max 10, 2 games per matchup)
 
-> Results measured by running `bun run benchmark`. Each number is averaged over 2 games.
+> Results measured with `bun --expose-gc tests/benchmark/run.ts` (Bun is required — the `benchmark` script runs the `.ts` file directly and cannot execute under plain `npm`/`node`). Each number is averaged over 2 games. Raw per-turn data is written to `tests/benchmark/results/latest.json` (`turnStats[]` per matchup).
+>
+> **Heads-up:** this run used a **1000 ms/move budget for all three engines** — the working tree has `heuristic/constants.ts` `TIME_BUDGET_MS` at 1000 (committed value is 100). That is why Heuristic below averages ~560 ms/turn instead of ~80 ms in earlier runs.
+
+#### Metric glossary (`latest.json`)
+
+Per-turn entries (`turnStats[]`), recorded for every move:
+| Field | What it measures |
+| ----- | ---------------- |
+| `nodes` | States visited during that move's search. Cumulative counter — not live memory. |
+| `durationMs` | Wall-clock time spent searching that move. |
+| `peakFrontier` | Max states alive at once: queue length for BFS, call-stack depth for DFS/Heuristic. The true live-memory comparison. |
+| `tableSize` | Transposition-table entries held when the search returned. |
+| `heapDeltaKb` | `heapUsed` after minus before the search, in kB. Real process memory but GC-noisy: a turn can read negative (GC ran mid-search) or hugely positive (it didn't). Only the **max** per-turn value is meaningful — it approximates the worst single-turn transient allocation. |
+
+Per-side summary (`summary["BFS (as X)"]`, …): the same quantities aggregated over that side's turns (`totalNodes`, `avgNodesPerTurn`, `avgMsPerTurn`, `totalTurns`, `avgPeakFrontier`, `maxPeakFrontier`, `avgTableSize`, `avgHeapDeltaKb`, `maxHeapDeltaKb`).
+
+Matchup level: `wins` counts X-side wins, O-side wins, and draws; `games[]` lists each game's side-labelled winner (e.g. `X (DFS)`, `O (BFS)`, `Draw`) and its length in turns, so mirror matchups stay unambiguous.
 
 #### Head-to-Head Win Rates
 
-| X Player  | O Player  | X Wins | O Wins | Draws |
-| --------- | --------- | ------ | ------ | ----- |
-| BFS       | BFS       | 2      | 0      | 0     |
-| BFS       | DFS       | 0      | 2      | 0     |
-| BFS       | Heuristic | 0      | 2      | 0     |
-| DFS       | BFS       | 2      | 0      | 0     |
-| DFS       | DFS       | 2      | 0      | 0     |
-| DFS       | Heuristic | 0      | 2      | 0     |
-| Heuristic | BFS       | 2      | 0      | 0     |
-| Heuristic | DFS       | 2      | 0      | 0     |
-| Heuristic | Heuristic | 1      | 0      | 1     |
+| X Player  | O Player  | X Wins | O Wins | Draws | Games (winner, turns)       |
+| --------- | --------- | ------ | ------ | ----- | --------------------------- |
+| BFS       | BFS       | 0      | 2      | 0     | O (BFS) 54, O (BFS) 48      |
+| BFS       | DFS       | 0      | 2      | 0     | O (DFS) 28, O (DFS) 28      |
+| BFS       | Heuristic | 0      | 2      | 0     | O (Heur.) 24, O (Heur.) 24  |
+| DFS       | BFS       | 2      | 0      | 0     | X (DFS) 33, X (DFS) 33      |
+| DFS       | DFS       | 2      | 0      | 0     | X (DFS) 51, X (DFS) 51      |
+| DFS       | Heuristic | 0      | 2      | 0     | O (Heur.) 44, O (Heur.) 40  |
+| Heuristic | BFS       | 2      | 0      | 0     | X (Heur.) 23, X (Heur.) 23  |
+| Heuristic | DFS       | 2      | 0      | 0     | X (Heur.) 49, X (Heur.) 49  |
+| Heuristic | Heuristic | 2      | 0      | 0     | X (Heur.) 55, X (Heur.) 55  |
 
 **Overall ranking:** Heuristic > DFS > BFS
 
+> **Note:** Console and JSON output label winners by side (`X (DFS)`, `O (BFS)`) so mirror matchups (BFS vs BFS, …) are unambiguous, and each game's winner and length is logged. Blind-search (BFS/DFS) outcomes are timing-sensitive: both engines run a fixed 1 s/move budget, so small timing shifts can flip results between runs (e.g. BFS vs BFS previously favoured X).
+
 #### Average Nodes Explored per Turn
 
-| Algorithm | Avg Nodes/Turn | Avg Time/Turn (ms) |
-| --------- | -------------- | ------------------ |
-| BFS       | ~280,000       | ~960 ms            |
-| DFS       | ~1,020,000     | ~945 ms            |
-| Heuristic | ~40,000        | ~85 ms             |
+| Algorithm | Avg Nodes/Turn | Avg Time/Turn (ms) | Avg Peak Frontier | Max Peak Frontier | Avg TT Entries | Max Heap Δ/Turn |
+| --------- | -------------- | ------------------ | ----------------- | ----------------- | -------------- | --------------- |
+| BFS       | ~173,000       | ~898 ms            | ~1,660,000        | ~2,410,000        | ~90,000        | ~679 MB         |
+| DFS       | ~1,010,000     | ~949 ms            | ~7                | 10                | ~94,000        | ~22 MB          |
+| Heuristic | ~289,000       | ~564 ms            | ~9                | 10                | ~60,000        | ~25 MB          |
 
-> **Key insight:** The Heuristic engine explores **25× fewer nodes** than DFS and **7× fewer** than BFS per turn, yet wins every head-to-head matchup. Alpha-Beta pruning and move ordering redirect the search budget toward positions that actually matter, rather than exhaustively expanding all reachable states.
+> **Key insight:** With equal 1 s budgets, the Heuristic engine explores **~3.5× fewer nodes** than DFS yet beats it every time — Alpha-Beta pruning and move ordering spend the budget on positions that matter. BFS visits the fewest nodes only because its queue-choked search burns the budget on breadth instead of depth.
+>
+> **Memory insight:** `nodes` is cumulative visits, not live memory. Real memory (`Max Heap Δ`, worst single-turn `heapUsed` growth) shows the gap plainly: one BFS turn can transiently allocate **~679 MB** (a ~2.4 M-state queue of full board copies), versus **~22 MB** for DFS and **~25 MB** for Heuristic. Average heap delta is deliberately omitted — it goes negative whenever GC runs mid-search (see glossary).
 
 #### Memory Usage
 
-- **BFS:** Holds the entire frontier in memory simultaneously. At depth 10 with branching factor ~30, the queue can grow to hundreds of thousands of entries — the dominant memory consumer.
-- **DFS / IDS:** Only the current path (depth-limited to 10 frames) is on the call stack at any time. Memory is $O(d)$.
-- **Heuristic:** Same $O(d)$ call stack as DFS, plus a bounded transposition table capped at 100,000 entries (~a few MB).
+- **BFS:** Holds the entire frontier in memory simultaneously. Measured avg ~1.66 M queued states (max ~2.41 M) at depth 10, with a worst single-turn heap growth of ~679 MB — the dominant memory consumer, plus a ~90 k-entry transposition table.
+- **DFS / IDS:** Only the current path (max 10 frames, typically ~7) is on the call stack at any time. Memory is $O(d)$ — worst single-turn heap growth ~22 MB — plus a ~94 k-entry transposition table shared across IDS iterations.
+- **Heuristic:** Same $O(d)$ call stack as DFS (max 10 frames), worst single-turn heap growth ~25 MB. At a 1000 ms budget its transposition table fills to ~60 k entries (vs ~12 k at the committed 100 ms budget).

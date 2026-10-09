@@ -105,10 +105,21 @@ Access the production application at `http://localhost:3000`.
 | `bun run test`      | Executes full Vitest regression test suite                       |
 | `bun run lint`      | Lints codebase with Oxlint                                       |
 | `bun run format`    | Formats code using Prettier and Tailwind plugin                  |
-| `bun run benchmark` | Runs all 9 AI matchup pairings and generates performance metrics |
+| `bun run benchmark` | Runs all 9 AI matchup pairings and generates performance metrics (requires Bun — see below) |
 | `bun run preview`   | Serves local production build preview                            |
 
-_(All scripts can also be run with `npm run <command>`)_
+_(All scripts can also be run with `npm run <command>`, except `benchmark`, whose script invokes the `bun` binary directly.)_
+
+#### Benchmark runner (Bun only)
+
+The benchmark executes TypeScript directly and uses Bun/Node process APIs (`process.memoryUsage()`, `--expose-gc`), so it cannot run with plain `npm`/`node`:
+
+```shell
+bun --expose-gc tests/benchmark/run.ts
+# (or bun run benchmark — same thing without the GC flag)
+```
+
+`npm run benchmark` only works if the `bun` binary is installed and on `PATH`. Without `--expose-gc`, per-turn GC settling is skipped and `heapDeltaKb` figures get noisier (algorithmic peaks are unaffected).
 
 ---
 
