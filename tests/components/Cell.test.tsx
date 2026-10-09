@@ -225,3 +225,68 @@ describe("Cell hover affordance", () => {
         expect(classes).toContain("cursor-default");
     });
 });
+
+describe("Cell disabled state", () => {
+    beforeEach(() => {
+        useBoardStoreMock.mockReset();
+    });
+
+    afterEach(cleanup);
+
+    const cellButton = () =>
+        screen.getByRole("button", {
+            name: /cell row 1, column 1: empty/,
+        }) as HTMLButtonElement;
+
+    it("is enabled only while the human may move", () => {
+        useBoardStoreMock.mockReturnValue(storeState({ canHumanMove: true }));
+
+        render(<Cell cellClickProps={xPosition} />);
+
+        expect(cellButton().disabled).toBe(false);
+    });
+
+    it("is disabled after game over and on the AI's turn after an error", () => {
+        // Both states reach the cell as canHumanMove=false with isAiTurn=false
+        // (game over: winner set; AI error: cancelAiWork cleared isAiTurn).
+        useBoardStoreMock.mockReturnValue(
+            storeState({ canHumanMove: false, isAiTurn: false }),
+        );
+
+        render(<Cell cellClickProps={xPosition} />);
+
+        expect(cellButton().disabled).toBe(true);
+    });
+
+    it("uses the reviewed position's boards for the affordance", () => {
+        const handleCellClick = vi.fn();
+        useBoardStoreMock.mockReturnValue(
+            storeState({
+                handleCellClick,
+                // Live state would allow board (0,0) ...
+                availableLocalBoards: [
+                    { localRow: 0, localCol: 0, cellRow: 0, cellCol: 0 },
+                ],
+                // ... but the reviewed position only allowed board (2,2).
+                review: {
+                    moveIndex: 0,
+                    moveNumber: 1,
+                    move: { localRow: 2, localCol: 2, cellRow: 0, cellCol: 0 },
+                    board: createBoard(),
+                    availableLocalBoards: [
+                        { localRow: 2, localCol: 2, cellRow: 0, cellCol: 0 },
+                    ],
+                },
+                canHumanMove: false,
+            }),
+        );
+
+        render(<Cell cellClickProps={xPosition} />);
+
+        const cell = cellButton();
+        expect(cell.disabled).toBe(true);
+        expect(cell.className.split(" ")).not.toContain("hover:bg-sunset-400");
+        fireEvent.click(cell);
+        expect(handleCellClick).not.toHaveBeenCalled();
+    });
+});

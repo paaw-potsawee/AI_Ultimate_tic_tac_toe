@@ -94,9 +94,14 @@ export const togglePause = (): void => {
     emit();
 };
 
-/** Asks the AI for a move again after a failed attempt left it idle. */
+/**
+ * Asks the AI for a move again after a failed attempt left it idle. Retrying
+ * implies the match should run, so a paused AI vs AI match is resumed first;
+ * otherwise `doAiMove` would silently refuse while `isPaused` is set.
+ */
 export const retryAiMove = (): void => {
     if (store.winner !== null || store.isAiTurn || !isAiToMove()) return;
+    store.isPaused = false;
     doAiMove();
 };
 

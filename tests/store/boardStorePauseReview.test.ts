@@ -277,6 +277,33 @@ describe("BoardStore AI vs AI pause", () => {
         );
     });
 
+    it("resumes a paused match when the user retries after an AI error", async () => {
+        const hook = await startAiVsAi();
+        act(() => vi.advanceTimersByTime(500));
+
+        const worker = MockWorker.instances[0];
+        act(() =>
+            worker.emitMessage({
+                ok: false,
+                error: "No available moves",
+                epoch: lastRequest(worker).epoch,
+                durationMs: 1,
+            }),
+        );
+        expect(hook.result.current.board.aiError).toBe("No available moves");
+
+        act(() => hook.result.current.board.togglePause());
+        expect(hook.result.current.board.isPaused).toBe(true);
+
+        act(() => hook.result.current.board.retryAiMove());
+
+        expect(hook.result.current.board.isPaused).toBe(false);
+        expect(hook.result.current.board.aiError).toBeNull();
+        expect(hook.result.current.board.isAiTurn).toBe(true);
+        expect(MockWorker.instances).toHaveLength(2);
+        expect(MockWorker.instances[1].postMessage).toHaveBeenCalledOnce();
+    });
+
     it("does nothing outside AI vs AI mode", async () => {
         const hook = await renderStore();
         act(() =>

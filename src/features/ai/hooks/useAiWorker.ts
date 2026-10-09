@@ -44,10 +44,12 @@ export const useAiWorker = (): void => {
             };
 
             w.onerror = () => {
-                // Clear the ref before notifying so that any re-trigger inside
-                // notifyWorkerCrash → cancelAiWork → _terminateWorker finds
-                // the ref already null and skips a redundant terminate() call.
-                workerRef.current = null;
+                // An uncaught error does not stop a worker, so terminate it
+                // here or every crash leaks a live thread. Clear the ref first
+                // so the store's cancel path does not try to terminate again,
+                // and so the next trigger creates a fresh worker.
+                if (workerRef.current === w) workerRef.current = null;
+                w.terminate();
                 notifyWorkerCrash();
             };
 

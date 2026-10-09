@@ -64,8 +64,9 @@ const UltimateBoard = () => {
             className={cn(
                 "relative w-[min(100%,40.75rem,calc(100dvh-8.5rem))] shrink-0 justify-self-center border-4 bg-orange p-1 transition-colors sm:p-2",
                 // Reserve room inside the frame for the review banner so it
-                // never overlaps the cells or the panels below the board.
-                review ? "border-burgundy pb-12" : "border-black",
+                // never overlaps the cells or the panels below the board. The
+                // sm: variant is needed because `sm:p-2` would otherwise win.
+                review ? "border-burgundy pb-12 sm:pb-12" : "border-black",
             )}
         >
             {/* The grid lines are drawn relative to the board grid, not the frame. */}

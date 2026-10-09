@@ -30,10 +30,15 @@ const Cell = ({ cellClickProps }: CellProps) => {
         lastMove.cellCol === cellCol;
     // Only an empty cell inside a board the rules currently allow can take a
     // mark, so only those cells get the hover highlight and pointer cursor.
+    // Use the boards of the position being shown (review or live) so the
+    // affordance always agrees with the outline LocalBoard draws.
+    const shownAvailableBoards = review
+        ? review.availableLocalBoards
+        : availableLocalBoards;
     const isPlayable =
         Boolean(canHumanMove) &&
         !value &&
-        availableLocalBoards.some(
+        shownAvailableBoards.some(
             (b) => b.localRow === localRow && b.localCol === localCol,
         );
     const positionLabel = `Board row ${localRow + 1}, column ${localCol + 1}; cell row ${cellRow + 1}, column ${cellCol + 1}`;
@@ -60,7 +65,9 @@ const Cell = ({ cellClickProps }: CellProps) => {
                         : "bg-ocean-400/45 shadow-[inset_0_0_0_2px_rgba(0,95,115,0.5)]"),
             )}
             onClick={() => handleCellClick(cellClickProps)}
-            disabled={isAiTurn || Boolean(review)}
+            // Mirror the store's own gate: nothing is clickable while the
+            // game is over, an AI side is to move, or a past move is shown.
+            disabled={!canHumanMove}
         >
             {value === "X" ? <X /> : value === "O" ? <O /> : null}
             {isLastMove && (
