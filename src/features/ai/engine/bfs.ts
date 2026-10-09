@@ -20,7 +20,7 @@ const TIME_BUDGET_MS = 1000;
 export const evaluateBFS = (state: GameState, depth: number): SearchResult => {
     const availableMoves = getAvailableMoves(state);
     if (availableMoves.length === 0) {
-        return { move: null, nodes: 0 };
+        return { move: null, nodes: 0, peakFrontier: 0, tableSize: 0 };
     }
     const deadline = performance.now() + TIME_BUDGET_MS;
     const context: SearchContext = {
@@ -31,6 +31,7 @@ export const evaluateBFS = (state: GameState, depth: number): SearchResult => {
     const rootPlayer: Player = state.player;
     let fallbackMove: number | null = null;
     let fallbackScore = rootPlayer === 0 ? -Infinity : Infinity;
+    let peakFrontier = 0;
 
     try {
         const queue = new Queue<{
@@ -48,6 +49,7 @@ export const evaluateBFS = (state: GameState, depth: number): SearchResult => {
                 depth: 1,
             });
         }
+        peakFrontier = queue.getSize();
 
         while (!queue.isEmpty()) {
             const currentState = queue.dequeue();
@@ -78,6 +80,8 @@ export const evaluateBFS = (state: GameState, depth: number): SearchResult => {
                     return {
                         move: currentState.rootMove,
                         nodes: context.nodes,
+                        peakFrontier,
+                        tableSize: context.table.size,
                     };
                 // assume it is a lost then ovverides if draw or non-terminal node
                 let score = rootPlayer === 0 ? -WIN_SCORE : WIN_SCORE;
@@ -114,6 +118,7 @@ export const evaluateBFS = (state: GameState, depth: number): SearchResult => {
                     depth: currentState.depth + 1,
                 });
             }
+            if (queue.getSize() > peakFrontier) peakFrontier = queue.getSize();
         }
     } catch (error) {
         if (error !== SEARCH_TIMEOUT) throw error;
@@ -121,5 +126,7 @@ export const evaluateBFS = (state: GameState, depth: number): SearchResult => {
     return {
         move: fallbackMove ?? availableMoves[0],
         nodes: context.nodes,
+        peakFrontier,
+        tableSize: context.table.size,
     };
 };
