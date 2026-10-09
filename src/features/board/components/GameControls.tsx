@@ -1,5 +1,6 @@
 import { useBoardStore, useGameConfigStore } from "../store/boardStore";
 import { Button } from "@/components/ui";
+import { cn } from "@/lib/cn";
 import { GameMode } from "@/types/gameMode";
 
 interface Props {
@@ -7,9 +8,10 @@ interface Props {
 }
 
 const GameControls = ({ onBackToSetup }: Props) => {
-    const { back, clearBoard } = useBoardStore();
+    const { back, clearBoard, isPaused, togglePause, winner } = useBoardStore();
     const { leaveGame, mode } = useGameConfigStore();
     const isAiVsAi = mode === GameMode.AIVAI;
+    const isGameOver = winner !== null;
 
     const handleBackToSetup = () => {
         leaveGame();
@@ -17,10 +19,23 @@ const GameControls = ({ onBackToSetup }: Props) => {
     };
 
     return (
-        <div
-            className={`grid gap-2 ${isAiVsAi ? "grid-cols-2" : "grid-cols-3"}`}
-        >
-            {!isAiVsAi && (
+        <div className="grid grid-cols-3 gap-2">
+            {isAiVsAi ? (
+                <Button
+                    aria-pressed={isPaused}
+                    disabled={isGameOver}
+                    className={cn(
+                        "min-h-11 border-0 px-2 py-2 text-sm font-bold transition-colors sm:px-4 sm:text-base",
+                        isPaused
+                            ? "bg-sunset-400 text-black"
+                            : "bg-ocean-200 text-teal",
+                        isGameOver && "cursor-not-allowed opacity-50",
+                    )}
+                    onClick={togglePause}
+                >
+                    {isPaused ? "Resume" : "Pause"}
+                </Button>
+            ) : (
                 <Button
                     className="min-h-11 border-0 bg-ocean-200 px-2 py-2 text-sm font-bold text-teal sm:px-4 sm:text-base"
                     onClick={back}

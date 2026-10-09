@@ -1,5 +1,6 @@
 import type { CellPosition, RenderBoard } from "../types/board";
 import type { GameResult, Move, Player } from "../types/game";
+import type { ReviewSnapshot } from "../types/review";
 import {
     getAvailableLocalBoards,
     getGameWinningLine,
@@ -42,6 +43,10 @@ export const store = {
     gameWinningLineSnapshot: getGameWinningLine(initialState),
     aiStats: emptyStats() as [AiTurnStats, AiTurnStats],
     aiStatsSnapshot: emptyStats() as [AiTurnStats, AiTurnStats],
+    // AI vs AI only: true while the match is held by the Pause button.
+    isPaused: false,
+    // Non-null while the user is looking back at an earlier move in the log.
+    reviewSnapshot: null as ReviewSnapshot | null,
 };
 
 export const resetAiStats = (): void => {

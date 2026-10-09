@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Cell from "@/features/board/components/Cell";
 import type { RenderBoard } from "@/features/board/types/board";
@@ -57,6 +57,7 @@ describe("Cell last-move indicator", () => {
             handleCellClick: vi.fn(),
             history,
             isAiTurn: false,
+            review: null,
         }));
 
         const view = render(
@@ -86,5 +87,61 @@ describe("Cell last-move indicator", () => {
 
         expect(xCell.getAttribute("aria-current")).toBe("step");
         expect(oCell.getAttribute("aria-current")).toBeNull();
+    });
+});
+
+describe("Cell while reviewing a past move", () => {
+    beforeEach(() => {
+        useBoardStoreMock.mockReset();
+    });
+
+    afterEach(cleanup);
+
+    it("shows the reviewed position read-only instead of the live board", () => {
+        const liveBoard = createBoard();
+        liveBoard[0][0].board[0][0] = "X";
+        liveBoard[1][2].board[2][1] = "O";
+
+        const reviewBoard = createBoard();
+        reviewBoard[0][0].board[0][0] = "X";
+
+        const xMove = { ...xPosition, player: 0, board: 0, cell: 0 };
+        const oMove = { ...oPosition, player: 1, board: 5, cell: 7 };
+        const handleCellClick = vi.fn();
+
+        useBoardStoreMock.mockReturnValue({
+            board: liveBoard,
+            handleCellClick,
+            history: [xMove, oMove],
+            isAiTurn: false,
+            review: {
+                moveIndex: 0,
+                moveNumber: 1,
+                move: xMove,
+                board: reviewBoard,
+            },
+        });
+
+        render(
+            <>
+                <Cell cellClickProps={xPosition} />
+                <Cell cellClickProps={oPosition} />
+            </>,
+        );
+
+        const xCell = screen.getByRole("button", {
+            name: /cell row 1, column 1: X, move 1/,
+        });
+        const oCell = screen.getByRole("button", {
+            name: /cell row 3, column 2: empty/,
+        });
+
+        expect(xCell.getAttribute("aria-current")).toBe("step");
+        expect(oCell.getAttribute("aria-current")).toBeNull();
+        expect((xCell as HTMLButtonElement).disabled).toBe(true);
+        expect((oCell as HTMLButtonElement).disabled).toBe(true);
+
+        fireEvent.click(oCell);
+        expect(handleCellClick).not.toHaveBeenCalled();
     });
 });

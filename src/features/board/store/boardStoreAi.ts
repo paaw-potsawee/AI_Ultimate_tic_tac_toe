@@ -37,6 +37,7 @@ export const cancelAiWork = (): void => {
 export const doAiMove = (): void => {
     if (
         store.winner !== null ||
+        store.isPaused ||
         store.option === GameMode.PVP ||
         triggerMove === null
     ) {

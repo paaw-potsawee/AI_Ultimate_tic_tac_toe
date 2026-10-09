@@ -11,9 +11,14 @@ interface Props {
 }
 
 const LocalBoard = ({ localRow, localCol }: Props) => {
-    const { board, availableLocalBoards, winner } = useBoardStore();
-    const localData = board[localRow][localCol];
-    const isAvailable = availableLocalBoards.some(
+    const { board, availableLocalBoards, winner, review } = useBoardStore();
+    // While reviewing a past move, show that position instead of the live one.
+    const localData = (review ? review.board : board)[localRow][localCol];
+    const shownAvailableBoards = review
+        ? review.availableLocalBoards
+        : availableLocalBoards;
+    const shownWinner = review ? review.winner : winner;
+    const isAvailable = shownAvailableBoards.some(
         (b) => b.localRow === localRow && b.localCol === localCol,
     );
 
@@ -21,7 +26,7 @@ const LocalBoard = ({ localRow, localCol }: Props) => {
         <div
             className={cn(
                 "relative min-w-0 rounded-md border-2 p-0.5 transition-colors sm:rounded-lg sm:border-[3px]",
-                isAvailable && winner === null
+                isAvailable && shownWinner === null
                     ? "border-burgundy"
                     : "border-transparent",
             )}

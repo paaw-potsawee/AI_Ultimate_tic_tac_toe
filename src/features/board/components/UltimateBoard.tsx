@@ -1,6 +1,7 @@
 import LocalBoard from "./LocalBoard";
 import WinningSlash from "./WinningSlash";
 import { useBoardStore } from "../store/boardStore";
+import { cn } from "@/lib/cn";
 
 // Positions (in SVG viewBox units 0–100) of the two internal dividers.
 const DIVIDERS = [33.33, 66.67] as const;
@@ -48,12 +49,22 @@ for (const divider of DIVIDERS) {
 }
 
 const UltimateBoard = () => {
-    const { board, gameWinningLine } = useBoardStore();
+    const { board, gameWinningLine, review, exitReview } = useBoardStore();
+    // While reviewing a past move, the board shows that position read-only.
+    const shownBoard = review ? review.board : board;
+    const shownWinningLine = review ? review.gameWinningLine : gameWinningLine;
 
     return (
         <section
-            aria-label="Ultimate tic-tac-toe board"
-            className="relative w-[min(100%,40.75rem,calc(100dvh-8.5rem))] shrink-0 justify-self-center border-4 border-black bg-orange p-1 sm:p-2"
+            aria-label={
+                review
+                    ? `Ultimate tic-tac-toe board after move ${review.moveNumber}`
+                    : "Ultimate tic-tac-toe board"
+            }
+            className={cn(
+                "relative w-[min(100%,40.75rem,calc(100dvh-8.5rem))] shrink-0 justify-self-center border-4 bg-orange p-1 transition-colors sm:p-2",
+                review ? "border-burgundy" : "border-black",
+            )}
         >
             <svg
                 className="pointer-events-none absolute inset-0 h-full w-full"
@@ -75,7 +86,7 @@ const UltimateBoard = () => {
             </svg>
 
             <div className="relative grid grid-cols-3 gap-1 sm:gap-2">
-                {board.map((rowBoards, row) =>
+                {shownBoard.map((rowBoards, row) =>
                     rowBoards.map((_, col) => (
                         <LocalBoard
                             key={`${row}-${col}`}
@@ -86,13 +97,28 @@ const UltimateBoard = () => {
                 )}
             </div>
 
-            {gameWinningLine && (
+            {shownWinningLine && (
                 <WinningSlash
-                    line={gameWinningLine.line}
+                    line={shownWinningLine.line}
                     strokeWidth={8}
                     strokeColor="#000000"
                     className="z-30"
                 />
+            )}
+
+            {review && (
+                <div className="absolute -bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 border-2 border-black bg-burgundy py-1 pr-1 pl-3 text-[11px] font-black tracking-wider text-white uppercase shadow-[3px_3px_0_#000]">
+                    <span className="whitespace-nowrap">
+                        Viewing move {review.moveNumber}
+                    </span>
+                    <button
+                        type="button"
+                        onClick={exitReview}
+                        className="border-2 border-black bg-ocean-200 px-2 py-0.5 whitespace-nowrap text-black transition-colors hover:bg-ocean-400"
+                    >
+                        Back to live
+                    </button>
+                </div>
             )}
         </section>
     );

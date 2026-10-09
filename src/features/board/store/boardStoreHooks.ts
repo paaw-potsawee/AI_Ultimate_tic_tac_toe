@@ -6,7 +6,9 @@ import {
     handleCellClick,
     leaveGame,
     startGame,
+    togglePause,
 } from "./boardStoreController";
+import { exitReview, reviewMove } from "./boardStoreReview";
 import { setHumanPlayer, setMode } from "./boardStoreConfig";
 
 export const useBoardStore = () => {
@@ -38,6 +40,20 @@ export const useBoardStore = () => {
         },
         () => store.aiStatsSnapshot,
     );
+    const isPaused = useSyncExternalStore(
+        (listener) => {
+            listeners.add(listener);
+            return () => listeners.delete(listener);
+        },
+        () => store.isPaused,
+    );
+    const review = useSyncExternalStore(
+        (listener) => {
+            listeners.add(listener);
+            return () => listeners.delete(listener);
+        },
+        () => store.reviewSnapshot,
+    );
 
     return {
         board,
@@ -51,6 +67,11 @@ export const useBoardStore = () => {
         availableLocalBoards: store.availableLocalBoards,
         isAiTurn,
         aiStatsSnapshot,
+        isPaused,
+        togglePause,
+        review,
+        reviewMove,
+        exitReview,
     };
 };
 

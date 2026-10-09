@@ -12,6 +12,7 @@ import {
     isAvailableCell,
 } from "../game";
 import { cancelAiWork, doAiMove, startAiTurn } from "./boardStoreAi";
+import { clearReview, syncReviewWithHistory } from "./boardStoreReview";
 import {
     emit,
     optionListeners,
@@ -34,6 +35,8 @@ const resetState = (): void => {
     store.winner = null;
     store.history = [];
     store.isAiTurn = false;
+    store.isPaused = false;
+    clearReview();
     resetAiStats();
     refreshSnapshots();
 };
@@ -58,6 +61,28 @@ export const startGame = (
 
 export const leaveGame = (): void => {
     cancelAiWork();
+    store.isPaused = false;
+    clearReview();
+    emit();
+};
+
+/**
+ * AI vs AI only. Pausing cancels the pending or in-flight search so the match
+ * stops right away; resuming simply asks the current side to move again.
+ */
+export const togglePause = (): void => {
+    if (store.option !== GameMode.AIVAI) return;
+
+    if (store.isPaused) {
+        store.isPaused = false;
+        emit();
+        if (store.winner === null) startAiTurn(false);
+        return;
+    }
+
+    if (store.winner !== null) return;
+    cancelAiWork();
+    store.isPaused = true;
     emit();
 };
 
@@ -70,6 +95,7 @@ export const handleCellClick = ({
     if (
         store.winner !== null ||
         store.isAiTurn ||
+        store.reviewSnapshot !== null ||
         store.option === GameMode.AIVAI
     ) {
         return;
@@ -134,6 +160,7 @@ export const back = (): void => {
     store.currentPlayer = store.state.player;
     store.winner = checkGameWinner(store.state);
     store.isAiTurn = false;
+    syncReviewWithHistory();
     refreshSnapshots();
     emit();
 };
