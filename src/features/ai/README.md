@@ -121,7 +121,7 @@ At depth 0 (leaf nodes that are not terminal), the board position is scored usin
 
 ### Benchmark Results (BFS/DFS depth 10, Heuristic IDDFS max 10, 2 games per matchup)
 
-> Results measured by running `bun --expose-gc tests/benchmark/run.ts`. Each number is averaged over 2 games. Raw per-turn data is written to `tests/benchmark/results/latest.json` (`turnStats[]` per matchup).
+> Results measured with `bun --expose-gc tests/benchmark/run.ts` (Bun is required — the `benchmark` script runs the `.ts` file directly and cannot execute under plain `npm`/`node`). Each number is averaged over 2 games. Raw per-turn data is written to `tests/benchmark/results/latest.json` (`turnStats[]` per matchup).
 >
 > **Heads-up:** this run used a **1000 ms/move budget for all three engines** — the working tree has `heuristic/constants.ts` `TIME_BUDGET_MS` at 1000 (committed value is 100). That is why Heuristic below averages ~560 ms/turn instead of ~80 ms in earlier runs.
 
